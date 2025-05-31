@@ -9,9 +9,10 @@ const apiClient = new ApiClient({
 
 interface TicketOpenPageProps {
   technicianId?: number;
+  onTicketSelect?: (ticket: Ticket) => void;
 }
 
-const TicketOpenPage: React.FC<TicketOpenPageProps> = ({ technicianId = 1 }) => {
+const TicketOpenPage: React.FC<TicketOpenPageProps> = ({ technicianId = 1, onTicketSelect }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -323,7 +324,12 @@ const TicketOpenPage: React.FC<TicketOpenPageProps> = ({ technicianId = 1 }) => 
         ) : (
           <div className="tickets-grid">
             {tickets.map((ticket) => (
-              <div key={ticket.id} className="ticket-card">
+              <div 
+                key={ticket.id} 
+                className="ticket-card"
+                onClick={() => onTicketSelect?.(ticket)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="ticket-header">
                   <div className="ticket-title-row">
                     <h3 className="ticket-title">{ticket.title}</h3>

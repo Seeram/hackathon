@@ -3,28 +3,66 @@ version: '3.8'
 services:
   # PostgreSQL Database - same as base
   postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: api
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./services/db:/docker-entrypoint-initdb.d
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Express TSOA API - hidden behind reverse proxy
   api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: api
+      DB_USER: postgres
+      DB_PASSWORD: password
     # Remove direct port exposure in production
     ports: []
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
+    restart: unless-stopped
 
   # React Frontend - hidden behind reverse proxy
   frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: frontend
     environment:
       NODE_ENV: production
       # Use relative URL since everything goes through nginx
       REACT_APP_API_URL: ""
     # Remove direct port exposure in production
     ports: []
+    depends_on:
+      - api
     networks:
       - app-network
+    restart: unless-stopped
 
   # Nginx Reverse Proxy - main entry point
   nginx:
@@ -45,10 +83,16 @@ services:
 
   # Dozzle - log viewer (optional, can be removed in production)
   dozzle:
+    image: amir20/dozzle:latest
     ports:
       - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DOZZLE_LEVEL: info
     networks:
       - app-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
