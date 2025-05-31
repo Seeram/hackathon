@@ -1,7 +1,7 @@
 import os
 import PyPDF2
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # 1. Setup embeddings model
@@ -45,7 +45,7 @@ def split_pages(pages):
     return documents
 
 
-def build_vector_store(documents, save_path="./vectorstore"):
+def build_vector_store(documents, save_path=".vectorstore"):
     vector_store = Chroma.from_documents(
         documents, 
         embeddings,
@@ -53,7 +53,7 @@ def build_vector_store(documents, save_path="./vectorstore"):
     )
     return vector_store
 
-def search_pdfs(query, save_path="pdf_vector_store", k=3):
+def search_pdfs(query, save_path=".vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embeddings
@@ -80,7 +80,8 @@ if __name__ == "__main__":
     documents = split_pages(pages)
     build_vector_store(documents)
     
-    results = search_pdfs("Elevator button is broken")
+    query = input("Enter query: ") # "How to finalize the commisioning for MR elevators"
+    results = search_pdfs(f"{query}")
     for content, source, page in results:
         print(f"PDF: {os.path.basename(source)}, Page: {page}")
         print(f"Content: {content[:100]}...\n")
