@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ApiClient, Ticket } from '../api';
+import AIAssistantChat from './AIAssistantChat';
 import './TicketDetail.css';
 
 interface TicketDetailProps {
@@ -7,21 +8,10 @@ interface TicketDetailProps {
   onBack: () => void;
 }
 
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: 'user' | 'llm';
-  timestamp: Date;
-}
-
 const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const apiClient = new ApiClient({
     baseURL: process.env.REACT_APP_API_URL || '/api',
@@ -30,14 +20,6 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
   useEffect(() => {
     loadTicketDetails();
   }, [ticketId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages]);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const loadTicketDetails = async () => {
     try {
@@ -53,37 +35,9 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: newMessage.trim(),
-      sender: 'user',
-      timestamp: new Date(),
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setNewMessage('');
-    setChatLoading(true);
-
-    try {
-      // Simulate LLM response (replace with actual API call later)
-      setTimeout(() => {
-        const llmResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: `I understand you're asking about: "${userMessage.text}". This is a placeholder response. I can help you with troubleshooting, repair procedures, and technical guidance related to this ticket.`,
-          sender: 'llm',
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, llmResponse]);
-        setChatLoading(false);
-      }, 1000);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setChatLoading(false);
-    }
+  const handleAIMessageSent = (message: string) => {
+    console.log('AI message sent:', message);
+    // You can add any additional logic here when a message is sent to the AI
   };
 
   const getStatusColor = (status: string) => {
@@ -212,70 +166,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
           )}
         </div>
 
-        <div className="chat-section">
-          <h3>AI Assistant Chat</h3>
-          <div className="chat-container">
-            <div className="chat-messages">
-              {chatMessages.length === 0 && (
-                <div className="chat-welcome">
-                  <p>👋 Hello! I'm your AI assistant. I can help you with:</p>
-                  <ul>
-                    <li>Troubleshooting steps for this issue</li>
-                    <li>Repair procedures and manuals</li>
-                    <li>Technical guidance and documentation</li>
-                    <li>Parts information and recommendations</li>
-                  </ul>
-                  <p>Ask me anything about this ticket!</p>
-                </div>
-              )}
-              
-              {chatMessages.map(message => (
-                <div key={message.id} className={`chat-message ${message.sender}`}>
-                  <div className="message-content">
-                    <p>{message.text}</p>
-                    <span className="message-time">
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              
-              {chatLoading && (
-                <div className="chat-message llm">
-                  <div className="message-content">
-                    <div className="typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={chatEndRef} />
-            </div>
-            
-            <form onSubmit={handleSendMessage} className="chat-input-form">
-              <div className="chat-input-container">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Ask the AI assistant about this ticket..."
-                  className="chat-input"
-                  disabled={chatLoading}
-                />
-                <button 
-                  type="submit" 
-                  className="chat-send-button"
-                  disabled={chatLoading || !newMessage.trim()}
-                >
-                  Send
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AIAssistantChat 
+          ticketId={ticket.id}
+          onMessageSent={handleAIMessageSent}
+          placeholder={`Ask about ticket #${ticket.ticket_number}...`}
+        />
       </div>
     </div>
   );
