@@ -45,7 +45,7 @@ def split_pages(pages):
     return documents
 
 
-def build_vector_store(documents, save_path=".vectorstore"):
+def build_vector_store(documents, save_path="data/vectorstore"):
     vector_store = Chroma.from_documents(
         documents, 
         embeddings,
@@ -53,7 +53,7 @@ def build_vector_store(documents, save_path=".vectorstore"):
     )
     return vector_store
 
-def search_pdfs(query, save_path=".vectorstore", k=3):
+def search_pdfs(query, save_path="data/vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embeddings
@@ -75,8 +75,10 @@ def search_pdfs(query, save_path=".vectorstore", k=3):
 #     print(f"Content: {content[:100]}...\n")
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    pages = process_pdf_directory(os.path.join(script_dir, "pdfs"))
+    script_dir = os.path.dirname(__file__)
+    py_dir = os.path.dirname(script_dir)
+    pdfs_dir = os.path.join(py_dir, "data/pdfs")
+    pages = process_pdf_directory(pdfs_dir)
     documents = split_pages(pages)
     build_vector_store(documents)
     
