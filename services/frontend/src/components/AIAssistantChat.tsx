@@ -1,308 +1,283 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ApiClient, ChatRequest, ChatResponse, VoiceRecordingResponse, ProcessVoiceRecordingPayload } from '../api';
 import './AIAssistantChat.css';
-
-// Extend Window interface for Speech Recognition
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
 
 interface ChatMessage {
   id: string;
-  text: string;
-  sender: 'user' | 'llm';
-  timestamp: Date;
-  isVoiceMessage?: boolean;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  isVoice?: boolean;
 }
 
 interface AIAssistantChatProps {
   ticketId?: number;
-  className?: string;
-  height?: string;
   onMessageSent?: (message: string) => void;
-  welcomeMessage?: string;
+  onSuggestTicket?: (suggestion: any) => void;
   placeholder?: string;
+  height?: string;
+  className?: string;
+  welcomeMessage?: string;
 }
 
-const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
+// Configure API client
+const getApiBaseUrl = (): string => {
+  if (process.env.NODE_ENV === 'production') {
+    return '/api';
+  }
+  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
+};
+
+const apiClient = new ApiClient({
+  baseURL: getApiBaseUrl(),
+  timeout: 30000,
+});
+
+const AIAssistantChat: React.FC<AIAssistantChatProps> = ({ 
   ticketId,
-  className = '',
-  height = '700px',
   onMessageSent,
-  welcomeMessage,
-  placeholder = 'Ask the AI assistant about this ticket...'
+  onSuggestTicket,
+  placeholder = "Type your message or use voice recording...",
+  height = "700px",
+  className = "",
+  welcomeMessage
 }) => {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
-  const [lastMessageWasVoice, setLastMessageWasVoice] = useState(false);
-  
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages]);
-
-  useEffect(() => {
-    // Check if Speech Recognition is supported
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      setSpeechSupported(true);
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setNewMessage(transcript);
-        setLastMessageWasVoice(true);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
+  }, [messages]);
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    const userMessage: ChatMessage = {
+  const addMessage = (type: 'user' | 'assistant', content: string, isVoice: boolean = false) => {
+    const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      text: newMessage.trim(),
-      sender: 'user',
-      timestamp: new Date(),
-      isVoiceMessage: lastMessageWasVoice,
+      type,
+      content,
+      timestamp: new Date().toISOString(),
+      isVoice
     };
+    setMessages(prev => [...prev, newMessage]);
+  };
 
-    setChatMessages(prev => [...prev, userMessage]);
-    setNewMessage('');
-    setLastMessageWasVoice(false);
-    setChatLoading(true);
+  const sendTextMessage = async () => {
+    if (!inputText.trim()) return;
 
-    // Call the optional callback
+    const userMessage = inputText.trim();
+    setInputText('');
+    addMessage('user', userMessage);
+    setIsLoading(true);
+
+    // Call onMessageSent callback if provided
     if (onMessageSent) {
-      onMessageSent(userMessage.text);
+      onMessageSent(userMessage);
     }
 
     try {
-      // TODO: Replace with actual API call to your AI service
-      // For now, using a simulated response
-      setTimeout(() => {
-        const llmResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          text: generateAIResponse(userMessage.text, ticketId),
-          sender: 'llm',
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, llmResponse]);
-        setChatLoading(false);
-      }, 1000);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: 'Sorry, I encountered an error while processing your request. Please try again.',
-        sender: 'llm',
-        timestamp: new Date(),
+      const chatRequest: ChatRequest = {
+        message: userMessage,
+        ticketId: ticketId,
+        isVoiceMessage: false,
       };
-      setChatMessages(prev => [...prev, errorMessage]);
-      setChatLoading(false);
+
+      const response: ChatResponse = await apiClient.tickets.sendChatMessage(chatRequest);
+      addMessage('assistant', response.message?.text || 'Message received successfully.');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const generateAIResponse = (userText: string, ticketId?: number): string => {
-    // This is a placeholder function. Replace with actual AI service integration
-    const responses = [
-      `I understand you're asking about: "${userText}". Let me help you with that.`,
-      `Based on your question about "${userText}", here are some recommendations...`,
-      `For the issue you've described ("${userText}"), I suggest the following troubleshooting steps...`,
-      `Regarding "${userText}" - this is a common issue. Here's what I recommend...`,
-    ];
-    
-    const baseResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    if (ticketId) {
-      return `${baseResponse} This is for ticket #${ticketId}. I can provide specific guidance based on the ticket details.`;
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks(prev => [...prev, event.data]);
+        }
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      setAudioChunks([]);
+      recorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Failed to start recording. Please check your microphone permissions.');
     }
-    
-    return `${baseResponse} I can help you with troubleshooting, repair procedures, and technical guidance.`;
   };
 
-  const startVoiceRecording = async () => {
-    if (!speechSupported) {
-      alert('Speech recognition is not supported in your browser.');
-      return;
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setIsRecording(false);
     }
+  };
+
+  const processVoiceRecording = async () => {
+    if (audioChunks.length === 0) return;
+
+    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    const audioFile = new File([audioBlob], 'voice-recording.wav', {
+      type: 'audio/wav',
+      lastModified: Date.now(),
+    });
+    
+    addMessage('user', '[Voice message]', true);
+    setIsLoading(true);
 
     try {
-      if (recognitionRef.current && !isListening) {
-        recognitionRef.current.start();
+      const payload: ProcessVoiceRecordingPayload = {
+        audio: audioFile,
+        ticketId: ticketId?.toString(),
+      };
+
+      const response: VoiceRecordingResponse = await apiClient.tickets.processVoiceRecording(payload);
+      
+      // Add transcription as user message if available
+      if (response.transcription) {
+        // Replace the placeholder voice message with the actual transcription
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.content === '[Voice message]' && msg.type === 'user' 
+              ? { ...msg, content: response.transcription! }
+              : msg
+          )
+        );
       }
+
+      // Add assistant response
+      addMessage('assistant', response.message || 'Voice message processed successfully.');
     } catch (error) {
-      console.error('Error starting voice recognition:', error);
+      console.error('Error processing voice message:', error);
+      addMessage('assistant', 'Sorry, I had trouble processing your voice message. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setAudioChunks([]);
     }
   };
 
-  const stopVoiceRecording = () => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+  useEffect(() => {
+    if (!isRecording && audioChunks.length > 0) {
+      processVoiceRecording();
+    }
+  }, [isRecording, audioChunks]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendTextMessage();
     }
   };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewMessage(e.target.value);
-    setLastMessageWasVoice(false); // Reset voice flag when typing
-  };
-
-  const toggleVoiceRecording = () => {
-    if (isListening) {
-      stopVoiceRecording();
-    } else {
-      startVoiceRecording();
-    }
-  };
-
-  const clearChat = () => {
-    setChatMessages([]);
-  };
-
-  const defaultWelcomeMessage = (
-    <div className="ai-chat-welcome">
-      <p>👋 Hello! I'm your AI assistant. I can help you with:</p>
-      <ul>
-        <li>Troubleshooting steps for this issue</li>
-        <li>Repair procedures and manuals</li>
-        <li>Technical guidance and documentation</li>
-        <li>Parts information and recommendations</li>
-      </ul>
-      <p>Ask me anything about this ticket!</p>
-    </div>
-  );
 
   return (
     <div className={`ai-assistant-chat ${className}`} style={{ height }}>
       <div className="ai-chat-header">
-        <h3>AI Assistant Chat</h3>
-        {chatMessages.length > 0 && (
-          <button onClick={clearChat} className="ai-chat-clear-btn">
-            Clear Chat
-          </button>
+        <h3>AI Assistant</h3>
+        <button 
+          className="ai-chat-clear-btn"
+          onClick={() => setMessages([])}
+          title="Clear chat history"
+        >
+          Clear
+        </button>
+      </div>
+      
+      <div className="ai-chat-messages" ref={chatContainerRef}>
+        {messages.length === 0 && (
+          <div className="ai-chat-welcome">
+            {welcomeMessage ? (
+              <div dangerouslySetInnerHTML={{ __html: welcomeMessage }} />
+            ) : (
+              <>
+                <p>👋 Hi! I'm your AI maintenance assistant. I can help you with:</p>
+                <ul>
+                  <li>Diagnosing equipment problems</li>
+                  <li>Suggesting repair procedures</li>
+                  <li>Creating maintenance tickets</li>
+                  <li>Safety guidelines and protocols</li>
+                </ul>
+                <p>You can type your question or use voice recording!</p>
+              </>
+            )}
+          </div>
+        )}
+        
+        {messages.map((message) => (
+          <div key={message.id} className={`ai-chat-message ${message.type}`}>
+            <div className="ai-message-content">
+              {message.content}
+              {message.isVoice && <span className="voice-message-indicator">🎤</span>}
+            </div>
+            <div className="ai-message-time">
+              {new Date(message.timestamp).toLocaleTimeString()}
+            </div>
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="ai-chat-message assistant">
+            <div className="ai-message-content">
+              <div className="ai-typing-indicator">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       
-      <div className="ai-chat-container">
-        <div className="ai-chat-messages">
-          {chatMessages.length === 0 && (
-            welcomeMessage ? (
-              <div dangerouslySetInnerHTML={{ __html: welcomeMessage }} />
-            ) : (
-              defaultWelcomeMessage
-            )
-          )}
+      <div className="ai-chat-input-form">
+        <div className="ai-chat-input-container">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`ai-chat-voice-button ${isRecording ? 'listening' : ''}`}
+            disabled={isLoading}
+            title={isRecording ? 'Stop Recording' : 'Start Voice Recording'}
+          >
+            {isRecording ? '🛑' : '🎤'}
+          </button>
           
-          {chatMessages.map(message => (
-            <div key={message.id} className={`ai-chat-message ${message.sender}`}>
-              <div className="ai-message-content">
-                <p>
-                  {message.isVoiceMessage && message.sender === 'user' && (
-                    <span className="voice-message-indicator" title="Voice message">
-                      🎤 
-                    </span>
-                  )}
-                  {message.text}
-                </p>
-                <span className="ai-message-time">
-                  {message.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          ))}
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={placeholder}
+            className="ai-chat-input"
+            rows={1}
+            disabled={isLoading}
+          />
           
-          {chatLoading && (
-            <div className="ai-chat-message llm">
-              <div className="ai-message-content">
-                <div className="ai-typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={chatEndRef} />
+          <button
+            onClick={sendTextMessage}
+            disabled={!inputText.trim() || isLoading}
+            className="ai-chat-send-button"
+          >
+            Send
+          </button>
         </div>
         
-        <form onSubmit={handleSendMessage} className="ai-chat-input-form">
-          <div className="ai-chat-input-container">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={handleInputChange}
-              placeholder={isListening ? "Listening..." : placeholder}
-              className="ai-chat-input"
-              disabled={chatLoading || isListening}
-            />
-            {speechSupported && (
-              <button
-                type="button"
-                onClick={toggleVoiceRecording}
-                className={`ai-chat-voice-button ${isListening ? 'listening' : ''}`}
-                disabled={chatLoading}
-                title={isListening ? "Stop listening" : "Start voice input"}
-              >
-                {isListening ? (
-                  <div className="voice-recording-indicator">
-                    <span className="pulse-dot"></span>
-                    🎤
-                  </div>
-                ) : (
-                  '🎤'
-                )}
-              </button>
-            )}
-            <button 
-              type="submit" 
-              className="ai-chat-send-button"
-              disabled={chatLoading || (!newMessage.trim() && !isListening)}
-            >
-              Send
-            </button>
-          </div>
-          {isListening && (
-            <div className="voice-status">
-              <span className="voice-status-text">🎤 Listening... Speak now</span>
+        {isRecording && (
+          <div className="voice-status">
+            <div className="voice-status-text">
+              🎤 Recording in progress...
             </div>
-          )}
-        </form>
+          </div>
+        )}
       </div>
     </div>
   );
