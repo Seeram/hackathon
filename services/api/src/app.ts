@@ -26,6 +26,18 @@ app.get('/api/health', (req, res) => {
 // Serve Swagger documentation
 try {
   const swaggerDocument = require('../public/swagger.json');
+  // Update the servers to include the /api prefix for proper reverse proxy support
+  swaggerDocument.servers = [
+    {
+      url: 'http://localhost:3000/api',
+      description: 'Development server'
+    },
+    {
+      url: '/api',
+      description: 'Production server (via reverse proxy)'
+    }
+  ];
+  
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   console.log('Swagger UI available at http://localhost:3000/api-docs');
 } catch (error) {

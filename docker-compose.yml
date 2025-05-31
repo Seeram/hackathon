@@ -34,8 +34,9 @@ services:
       DB_NAME: api
       DB_USER: postgres
       DB_PASSWORD: password
-    ports:
-      - "3001:3000"
+    # Remove direct port exposure - accessed through nginx
+    # ports:
+    #   - "3001:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,16 +44,36 @@ services:
       - app-network
     restart: unless-stopped
 
-  # Nginx Reverse Proxy (optional)
+  # React Frontend
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: frontend
+    environment:
+      NODE_ENV: production
+      REACT_APP_API_URL: "http://localhost"
+    # Remove direct port exposure - accessed through nginx
+    # ports:
+    #   - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: nginx
     ports:
-      - "8081:80"
+      - "80:80"
     volumes:
       - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - api
+      - frontend
     networks:
       - app-network
     restart: unless-stopped

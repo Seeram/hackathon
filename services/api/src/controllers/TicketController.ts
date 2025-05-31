@@ -90,11 +90,7 @@ export class TicketController extends Controller {
         @Query() technicianId?: number,
         @Query() priority?: string
     ): Promise<Ticket[]> {
-        if (technicianId) {
-            return await ticketDatabaseService.getTechnicianTickets(technicianId, status);
-        }
-        // For now, return empty array - you'd implement getAllTickets method
-        return [];
+        return await ticketDatabaseService.getAllTickets(status, technicianId, priority);
     }
 
     /**

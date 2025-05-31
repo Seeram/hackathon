@@ -3,38 +3,73 @@
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { Controller, ValidationService, FieldErrors, ValidateError, TsoaRoute, HttpStatusCodeLiteral, TsoaResponse, fetchMiddlewares } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { PostController } from './../controllers/PostController';
+import { TechnicianController } from './../controllers/TicketController';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { TicketController } from './../controllers/TicketController';
 import type { RequestHandler, Router } from 'express';
 
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
-    "PostModel": {
+    "TicketAttachment": {
         "dataType": "refObject",
         "properties": {
             "id": {"dataType":"double","required":true},
-            "title": {"dataType":"string","required":true},
-            "content": {"dataType":"string","required":true},
-            "author": {"dataType":"string","required":true},
-            "created_at": {"dataType":"datetime"},
-            "updated_at": {"dataType":"datetime"},
+            "file_name": {"dataType":"string","required":true},
+            "file_type": {"dataType":"string","required":true},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreatePostRequest": {
+    "Ticket": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"double","required":true},
+            "ticket_number": {"dataType":"string","required":true},
+            "title": {"dataType":"string","required":true},
+            "description": {"dataType":"string"},
+            "location": {"dataType":"string"},
+            "priority": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["low"]},{"dataType":"enum","enums":["medium"]},{"dataType":"enum","enums":["high"]},{"dataType":"enum","enums":["urgent"]}],"required":true},
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["assigned"]},{"dataType":"enum","enums":["in_progress"]},{"dataType":"enum","enums":["completed"]},{"dataType":"enum","enums":["cancelled"]}],"required":true},
+            "assigned_technician_id": {"dataType":"double","required":true},
+            "customer_name": {"dataType":"string"},
+            "customer_phone": {"dataType":"string"},
+            "scheduled_date": {"dataType":"datetime"},
+            "created_at": {"dataType":"datetime","required":true},
+            "updated_at": {"dataType":"datetime","required":true},
+            "attachments": {"dataType":"array","array":{"dataType":"refObject","ref":"TicketAttachment"}},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateTicketRequest": {
         "dataType": "refObject",
         "properties": {
             "title": {"dataType":"string","required":true},
-            "content": {"dataType":"string","required":true},
-            "author": {"dataType":"string","required":true},
+            "description": {"dataType":"string"},
+            "location": {"dataType":"string"},
+            "priority": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["low"]},{"dataType":"enum","enums":["medium"]},{"dataType":"enum","enums":["high"]},{"dataType":"enum","enums":["urgent"]}]},
+            "assigned_technician_id": {"dataType":"double","required":true},
+            "customer_name": {"dataType":"string"},
+            "customer_phone": {"dataType":"string"},
+            "scheduled_date": {"dataType":"datetime"},
         },
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Partial_CreatePostRequest_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"title":{"dataType":"string"},"content":{"dataType":"string"},"author":{"dataType":"string"}},"validators":{}},
+    "UpdateTicketRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "title": {"dataType":"string"},
+            "description": {"dataType":"string"},
+            "location": {"dataType":"string"},
+            "priority": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["low"]},{"dataType":"enum","enums":["medium"]},{"dataType":"enum","enums":["high"]},{"dataType":"enum","enums":["urgent"]}]},
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["assigned"]},{"dataType":"enum","enums":["in_progress"]},{"dataType":"enum","enums":["completed"]},{"dataType":"enum","enums":["cancelled"]}]},
+            "customer_name": {"dataType":"string"},
+            "customer_phone": {"dataType":"string"},
+            "scheduled_date": {"dataType":"datetime"},
+        },
+        "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 };
@@ -47,12 +82,14 @@ export function RegisterRoutes(app: Router) {
     //  NOTE: If you do not see routes for all of your controllers in this file, then you might not have informed tsoa of where to look
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
-        app.get('/api/posts',
-            ...(fetchMiddlewares<RequestHandler>(PostController)),
-            ...(fetchMiddlewares<RequestHandler>(PostController.prototype.getPosts)),
+        app.get('/api/technicians/:technicianId/tickets',
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController)),
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController.prototype.getTechnicianTickets)),
 
-            function PostController_getPosts(request: any, response: any, next: any) {
+            function TechnicianController_getTechnicianTickets(request: any, response: any, next: any) {
             const args = {
+                    technicianId: {"in":"path","name":"technicianId","required":true,"dataType":"double"},
+                    status: {"in":"query","name":"status","dataType":"union","subSchemas":[{"dataType":"enum","enums":["assigned"]},{"dataType":"enum","enums":["in_progress"]},{"dataType":"enum","enums":["completed"]},{"dataType":"enum","enums":["cancelled"]}]},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -61,21 +98,101 @@ export function RegisterRoutes(app: Router) {
             try {
                 validatedArgs = getValidatedArgs(args, request, response);
 
-                const controller = new PostController();
+                const controller = new TechnicianController();
 
 
-              const promise = controller.getPosts.apply(controller, validatedArgs as any);
+              const promise = controller.getTechnicianTickets.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/api/posts/:id',
-            ...(fetchMiddlewares<RequestHandler>(PostController)),
-            ...(fetchMiddlewares<RequestHandler>(PostController.prototype.getPost)),
+        app.get('/api/technicians/:technicianId/tickets/:ticketId',
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController)),
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController.prototype.getTicket)),
 
-            function PostController_getPost(request: any, response: any, next: any) {
+            function TechnicianController_getTicket(request: any, response: any, next: any) {
+            const args = {
+                    technicianId: {"in":"path","name":"technicianId","required":true,"dataType":"double"},
+                    ticketId: {"in":"path","name":"ticketId","required":true,"dataType":"double"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new TechnicianController();
+
+
+              const promise = controller.getTicket.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.patch('/api/technicians/:technicianId/tickets/:ticketId/status',
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController)),
+            ...(fetchMiddlewares<RequestHandler>(TechnicianController.prototype.updateTicketStatus)),
+
+            function TechnicianController_updateTicketStatus(request: any, response: any, next: any) {
+            const args = {
+                    technicianId: {"in":"path","name":"technicianId","required":true,"dataType":"double"},
+                    ticketId: {"in":"path","name":"ticketId","required":true,"dataType":"double"},
+                    requestBody: {"in":"body","name":"requestBody","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["assigned"]},{"dataType":"enum","enums":["in_progress"]},{"dataType":"enum","enums":["completed"]},{"dataType":"enum","enums":["cancelled"]}],"required":true}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new TechnicianController();
+
+
+              const promise = controller.updateTicketStatus.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/tickets',
+            ...(fetchMiddlewares<RequestHandler>(TicketController)),
+            ...(fetchMiddlewares<RequestHandler>(TicketController.prototype.getAllTickets)),
+
+            function TicketController_getAllTickets(request: any, response: any, next: any) {
+            const args = {
+                    status: {"in":"query","name":"status","dataType":"string"},
+                    technicianId: {"in":"query","name":"technicianId","dataType":"double"},
+                    priority: {"in":"query","name":"priority","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new TicketController();
+
+
+              const promise = controller.getAllTickets.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/tickets/:id',
+            ...(fetchMiddlewares<RequestHandler>(TicketController)),
+            ...(fetchMiddlewares<RequestHandler>(TicketController.prototype.getTicket)),
+
+            function TicketController_getTicket(request: any, response: any, next: any) {
             const args = {
                     id: {"in":"path","name":"id","required":true,"dataType":"double"},
             };
@@ -86,23 +203,23 @@ export function RegisterRoutes(app: Router) {
             try {
                 validatedArgs = getValidatedArgs(args, request, response);
 
-                const controller = new PostController();
+                const controller = new TicketController();
 
 
-              const promise = controller.getPost.apply(controller, validatedArgs as any);
+              const promise = controller.getTicket.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/api/posts',
-            ...(fetchMiddlewares<RequestHandler>(PostController)),
-            ...(fetchMiddlewares<RequestHandler>(PostController.prototype.createPost)),
+        app.post('/api/tickets',
+            ...(fetchMiddlewares<RequestHandler>(TicketController)),
+            ...(fetchMiddlewares<RequestHandler>(TicketController.prototype.createTicket)),
 
-            function PostController_createPost(request: any, response: any, next: any) {
+            function TicketController_createTicket(request: any, response: any, next: any) {
             const args = {
-                    requestBody: {"in":"body","name":"requestBody","required":true,"ref":"CreatePostRequest"},
+                    requestBody: {"in":"body","name":"requestBody","required":true,"ref":"CreateTicketRequest"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -111,49 +228,24 @@ export function RegisterRoutes(app: Router) {
             try {
                 validatedArgs = getValidatedArgs(args, request, response);
 
-                const controller = new PostController();
+                const controller = new TicketController();
 
 
-              const promise = controller.createPost.apply(controller, validatedArgs as any);
+              const promise = controller.createTicket.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.put('/api/posts/:id',
-            ...(fetchMiddlewares<RequestHandler>(PostController)),
-            ...(fetchMiddlewares<RequestHandler>(PostController.prototype.updatePost)),
+        app.put('/api/tickets/:id',
+            ...(fetchMiddlewares<RequestHandler>(TicketController)),
+            ...(fetchMiddlewares<RequestHandler>(TicketController.prototype.updateTicket)),
 
-            function PostController_updatePost(request: any, response: any, next: any) {
-            const args = {
-                    id: {"in":"path","name":"id","required":true,"dataType":"double"},
-                    requestBody: {"in":"body","name":"requestBody","required":true,"ref":"Partial_CreatePostRequest_"},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = getValidatedArgs(args, request, response);
-
-                const controller = new PostController();
-
-
-              const promise = controller.updatePost.apply(controller, validatedArgs as any);
-              promiseHandler(controller, promise, response, undefined, next);
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.delete('/api/posts/:id',
-            ...(fetchMiddlewares<RequestHandler>(PostController)),
-            ...(fetchMiddlewares<RequestHandler>(PostController.prototype.deletePost)),
-
-            function PostController_deletePost(request: any, response: any, next: any) {
+            function TicketController_updateTicket(request: any, response: any, next: any) {
             const args = {
                     id: {"in":"path","name":"id","required":true,"dataType":"double"},
+                    requestBody: {"in":"body","name":"requestBody","required":true,"ref":"UpdateTicketRequest"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -162,10 +254,35 @@ export function RegisterRoutes(app: Router) {
             try {
                 validatedArgs = getValidatedArgs(args, request, response);
 
-                const controller = new PostController();
+                const controller = new TicketController();
 
 
-              const promise = controller.deletePost.apply(controller, validatedArgs as any);
+              const promise = controller.updateTicket.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.delete('/api/tickets/:id',
+            ...(fetchMiddlewares<RequestHandler>(TicketController)),
+            ...(fetchMiddlewares<RequestHandler>(TicketController.prototype.deleteTicket)),
+
+            function TicketController_deleteTicket(request: any, response: any, next: any) {
+            const args = {
+                    id: {"in":"path","name":"id","required":true,"dataType":"double"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new TicketController();
+
+
+              const promise = controller.deleteTicket.apply(controller, validatedArgs as any);
               promiseHandler(controller, promise, response, undefined, next);
             } catch (err) {
                 return next(err);

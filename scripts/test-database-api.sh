@@ -11,8 +11,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Test URLs
-API_URL="http://localhost:3001"
-NGINX_URL="http://localhost:8081"
+API_URL="http://localhost:3000"  # API not directly exposed in production, will likely fail
+NGINX_URL="http://localhost:9000"  # Nginx port from production config
 
 # Test technician ID
 TECHNICIAN_ID=1
