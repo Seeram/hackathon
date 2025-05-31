@@ -10,25 +10,27 @@ def process_speech(user_input):
 
     # TODO Compute embeddings, perform semantic search
     # TODO Perform planning, or maybe planning should be done at the beginning step?
-    pass
+    return user_input
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-def process_dialogue():
+def process_dialogue(user_input):
     # Receive input from user, which could be speech or image
-    end = False
     model = whisper.load_model("tiny", device=device)
 
-    while not end:
+    while user_input:
         # Ensure modality = text or image
-        user_input = None
-        modality = None # Some function of the user input
+        modality = "speech" # Some function of the user input
         match modality:
             case "image":
                 pass
             case "speech":
-                user_input_speech = model.transcribe(user_input, fp16=True,
-                                                  language="en", condition_on_previous_text=False)
+                user_input_speech = model.transcribe(user_input, 
+                                                     fp16=True,
+                                                     language="en", 
+                                                     condition_on_previous_text=False)
                 output = process_speech(user_input_speech)
             case None:
                 pass
+        user_input = None
+    return output
