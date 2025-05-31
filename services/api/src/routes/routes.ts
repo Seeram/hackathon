@@ -3,14 +3,60 @@
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { Controller, ValidationService, FieldErrors, ValidateError, TsoaRoute, HttpStatusCodeLiteral, TsoaResponse, fetchMiddlewares } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { AIAssistantController } from './../controllers/AIAssistantController';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { TechnicianController } from './../controllers/TicketController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { TicketController } from './../controllers/TicketController';
 import type { RequestHandler, Router } from 'express';
+const multer = require('multer');
+const upload = multer();
 
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
+    "ChatMessage": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "text": {"dataType":"string","required":true},
+            "sender": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["user"]},{"dataType":"enum","enums":["llm"]}],"required":true},
+            "timestamp": {"dataType":"datetime","required":true},
+            "isVoiceMessage": {"dataType":"boolean"},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ChatResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "message": {"ref":"ChatMessage","required":true},
+            "success": {"dataType":"boolean","required":true},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ChatRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "message": {"dataType":"string","required":true},
+            "ticketId": {"dataType":"double"},
+            "isVoiceMessage": {"dataType":"boolean"},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "VoiceRecordingResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "message": {"dataType":"string","required":true},
+            "transcription": {"dataType":"string"},
+            "processedText": {"dataType":"string"},
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "TicketAttachment": {
         "dataType": "refObject",
         "properties": {
@@ -82,6 +128,84 @@ export function RegisterRoutes(app: Router) {
     //  NOTE: If you do not see routes for all of your controllers in this file, then you might not have informed tsoa of where to look
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
+        app.post('/api/tickets/chat',
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController)),
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController.prototype.sendChatMessage)),
+
+            function AIAssistantController_sendChatMessage(request: any, response: any, next: any) {
+            const args = {
+                    requestBody: {"in":"body","name":"requestBody","required":true,"ref":"ChatRequest"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new AIAssistantController();
+
+
+              const promise = controller.sendChatMessage.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/api/tickets/voice-recording',
+            upload.single('audio'),
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController)),
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController.prototype.processVoiceRecording)),
+
+            function AIAssistantController_processVoiceRecording(request: any, response: any, next: any) {
+            const args = {
+                    audioFile: {"in":"formData","name":"audio","required":true,"dataType":"file"},
+                    ticketId: {"in":"formData","name":"ticketId","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new AIAssistantController();
+
+
+              const promise = controller.processVoiceRecording.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/api/tickets/:ticketId/ai-suggestions',
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController)),
+            ...(fetchMiddlewares<RequestHandler>(AIAssistantController.prototype.getTicketSuggestions)),
+
+            function AIAssistantController_getTicketSuggestions(request: any, response: any, next: any) {
+            const args = {
+                    ticketId: {"in":"path","name":"ticketId","required":true,"dataType":"double"},
+                    requestBody: {"in":"body","name":"requestBody","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"category":{"dataType":"string"},"context":{"dataType":"string"}}},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = getValidatedArgs(args, request, response);
+
+                const controller = new AIAssistantController();
+
+
+              const promise = controller.getTicketSuggestions.apply(controller, validatedArgs as any);
+              promiseHandler(controller, promise, response, undefined, next);
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.get('/api/technicians/:technicianId/tickets',
             ...(fetchMiddlewares<RequestHandler>(TechnicianController)),
             ...(fetchMiddlewares<RequestHandler>(TechnicianController.prototype.getTechnicianTickets)),

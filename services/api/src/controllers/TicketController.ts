@@ -13,12 +13,25 @@ import {
     Query 
 } from 'tsoa';
 import { Ticket, CreateTicketRequest, UpdateTicketRequest } from '../models/Ticket';
+import { AIChatLog } from '../models/AIChatLog';
 import { ticketDatabaseService } from '../services/TicketDatabaseService';
+import { AIChatLogService } from '../services/AIChatLogService';
 import { NotFoundError } from '../errors/HttpError';
+
+// Extended ticket interface to include AI chat logs
+export interface TicketWithChatLogs extends Ticket {
+    ai_chat_logs?: AIChatLog[];
+}
 
 @Route('technicians')
 @Tags('Technicians')
 export class TechnicianController extends Controller {
+    private aiChatLogService: AIChatLogService;
+
+    constructor() {
+        super();
+        this.aiChatLogService = new AIChatLogService();
+    }
 
     /**
      * Get all tickets assigned to a technician
@@ -32,14 +45,14 @@ export class TechnicianController extends Controller {
     }
 
     /**
-     * Get a specific ticket by ID (must belong to technician)
+     * Get a specific ticket by ID (must belong to technician) with AI chat logs
      */
     @Get('{technicianId}/tickets/{ticketId}')
     @Response(404, 'Ticket not found')
     public async getTicket(
         @Path() technicianId: number,
         @Path() ticketId: number
-    ): Promise<Ticket> {
+    ): Promise<TicketWithChatLogs> {
         const ticket = await ticketDatabaseService.getTicketById(ticketId);
         if (!ticket) {
             throw new NotFoundError('Ticket not found');
@@ -50,7 +63,21 @@ export class TechnicianController extends Controller {
             throw new NotFoundError('Ticket not found');
         }
 
-        return ticket;
+        // Fetch AI chat logs for this ticket
+        try {
+            await this.aiChatLogService.connect();
+            const chatLogs = await this.aiChatLogService.getChatLogsByTicketId(ticketId);
+            await this.aiChatLogService.disconnect();
+            
+            return {
+                ...ticket,
+                ai_chat_logs: chatLogs
+            };
+        } catch (error) {
+            console.error('Error fetching AI chat logs:', error);
+            // Return ticket without chat logs if there's an error
+            return ticket;
+        }
     }
 
     /**
@@ -80,6 +107,12 @@ export class TechnicianController extends Controller {
 @Route('tickets')
 @Tags('Tickets')
 export class TicketController extends Controller {
+    private aiChatLogService: AIChatLogService;
+
+    constructor() {
+        super();
+        this.aiChatLogService = new AIChatLogService();
+    }
 
     /**
      * Get all tickets
@@ -94,16 +127,31 @@ export class TicketController extends Controller {
     }
 
     /**
-     * Get a specific ticket by ID
+     * Get a specific ticket by ID with AI chat logs
      */
     @Get('{id}')
     @Response(404, 'Ticket not found')
-    public async getTicket(@Path() id: number): Promise<Ticket> {
+    public async getTicket(@Path() id: number): Promise<TicketWithChatLogs> {
         const ticket = await ticketDatabaseService.getTicketById(id);
         if (!ticket) {
             throw new NotFoundError('Ticket not found');
         }
-        return ticket;
+
+        // Fetch AI chat logs for this ticket
+        try {
+            await this.aiChatLogService.connect();
+            const chatLogs = await this.aiChatLogService.getChatLogsByTicketId(id);
+            await this.aiChatLogService.disconnect();
+            
+            return {
+                ...ticket,
+                ai_chat_logs: chatLogs
+            };
+        } catch (error) {
+            console.error('Error fetching AI chat logs:', error);
+            // Return ticket without chat logs if there's an error
+            return ticket;
+        }
     }
 
     /**

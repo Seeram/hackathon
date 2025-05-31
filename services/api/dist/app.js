@@ -30,14 +30,45 @@ const dotenv = __importStar(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const multer_1 = __importDefault(require("multer"));
 const routes_1 = require("./routes/routes");
-const DatabaseService_1 = require("./services/DatabaseService");
 const HttpError_1 = require("./errors/HttpError");
+const TicketDatabaseService_1 = require("./services/TicketDatabaseService");
 // Load environment variables
 dotenv.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
+// Configure multer for file uploads
+const upload = (0, multer_1.default)({
+    storage: multer_1.default.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        // Accept audio files
+        if (file.mimetype.startsWith('audio/')) {
+            cb(null, true);
+        }
+        else {
+            const error = new Error('Only audio files are allowed');
+            error.code = 'INVALID_FILE_TYPE';
+            cb(error, false);
+        }
+    }
+});
 app.use(body_parser_1.default.json());
+// CORS middleware for development
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    }
+    else {
+        next();
+    }
+});
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.status(200).json({
@@ -49,6 +80,17 @@ app.get('/api/health', (req, res) => {
 // Serve Swagger documentation
 try {
     const swaggerDocument = require('../public/swagger.json');
+    // Update the servers to include the /api prefix for proper reverse proxy support
+    swaggerDocument.servers = [
+        {
+            url: 'http://localhost:3000/api',
+            description: 'Development server'
+        },
+        {
+            url: '/api',
+            description: 'Production server (via reverse proxy)'
+        }
+    ];
     app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
     console.log('Swagger UI available at http://localhost:3000/api-docs');
 }
@@ -81,22 +123,25 @@ app.use((err, req, res, next) => {
 // Initialize database connection and start server
 async function startServer() {
     try {
-        await DatabaseService_1.databaseService.connect();
-        app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
-            console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
-        });
+        // Try to connect to database, but don't fail if it's not available
+        await TicketDatabaseService_1.ticketDatabaseService.connect();
+        console.log('Database connected successfully');
     }
     catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
+        console.warn('Database connection failed, but continuing without it:', error.message);
+        console.log('Note: Some endpoints that require database access will not work');
     }
+    // Start server regardless of database connection status
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+    });
 }
 // Graceful shutdown
 process.on('SIGINT', async () => {
     console.log('\nShutting down gracefully...');
     try {
-        await DatabaseService_1.databaseService.disconnect();
+        await TicketDatabaseService_1.ticketDatabaseService.disconnect();
         process.exit(0);
     }
     catch (error) {
@@ -107,7 +152,7 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down gracefully...');
     try {
-        await DatabaseService_1.databaseService.disconnect();
+        await TicketDatabaseService_1.ticketDatabaseService.disconnect();
         process.exit(0);
     }
     catch (error) {

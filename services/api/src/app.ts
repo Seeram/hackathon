@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import swaggerUi from 'swagger-ui-express';
+import multer from 'multer';
 import { RegisterRoutes } from './routes/routes';
 import { HttpError } from './errors/HttpError';
 import { ticketDatabaseService } from './services/TicketDatabaseService';
@@ -12,7 +13,37 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept audio files
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      const error = new Error('Only audio files are allowed') as any;
+      error.code = 'INVALID_FILE_TYPE';
+      cb(error, false);
+    }
+  }
+});
+
 app.use(bodyParser.json());
+
+// CORS middleware for development
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -74,16 +105,19 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Initialize database connection and start server
 async function startServer() {
   try {
+    // Try to connect to database, but don't fail if it's not available
     await ticketDatabaseService.connect();
-    
-    app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-        console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.log('Database connected successfully');
+  } catch (error: any) {
+    console.warn('Database connection failed, but continuing without it:', error.message);
+    console.log('Note: Some endpoints that require database access will not work');
   }
+  
+  // Start server regardless of database connection status
+  app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+  });
 }
 
 // Graceful shutdown

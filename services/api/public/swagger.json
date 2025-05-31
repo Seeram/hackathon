@@ -6,6 +6,95 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"ChatMessage": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"text": {
+						"type": "string"
+					},
+					"sender": {
+						"type": "string",
+						"enum": [
+							"user",
+							"llm"
+						]
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"isVoiceMessage": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id",
+					"text",
+					"sender",
+					"timestamp"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"ChatResponse": {
+				"properties": {
+					"message": {
+						"$ref": "#/components/schemas/ChatMessage"
+					},
+					"success": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"message",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"ChatRequest": {
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"ticketId": {
+						"type": "number",
+						"format": "double"
+					},
+					"isVoiceMessage": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"VoiceRecordingResponse": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"message": {
+						"type": "string"
+					},
+					"transcription": {
+						"type": "string"
+					},
+					"processedText": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"success",
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"TicketAttachment": {
 				"properties": {
 					"id": {
@@ -200,6 +289,156 @@
 	},
 	"openapi": "3.0.0",
 	"paths": {
+		"/tickets/chat": {
+			"post": {
+				"operationId": "SendChatMessage",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ChatResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Send a chat message to the AI assistant",
+				"tags": [
+					"AI Assistant"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChatRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tickets/voice-recording": {
+			"post": {
+				"operationId": "ProcessVoiceRecording",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VoiceRecordingResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid audio file"
+					}
+				},
+				"description": "Process voice recording and return transcription/response",
+				"tags": [
+					"AI Assistant"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"audio": {
+										"type": "string",
+										"format": "binary"
+									},
+									"ticketId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"audio"
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tickets/{ticketId}/ai-suggestions": {
+			"post": {
+				"operationId": "GetTicketSuggestions",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"context": {
+											"type": "string"
+										},
+										"suggestions": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"context",
+										"suggestions"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Get AI assistant suggestions for a specific ticket",
+				"tags": [
+					"AI Assistant"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "ticketId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"category": {
+										"type": "string"
+									},
+									"context": {
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/technicians/{technicianId}/tickets": {
 			"get": {
 				"operationId": "GetTechnicianTickets",
