@@ -121,5 +121,9 @@ dist/
 # Test coverage
 coverage/
 
-.venv
+.venv*
 .envrc
+*.wav
+*.mp3
+pdfs/
+.vectorstore/
