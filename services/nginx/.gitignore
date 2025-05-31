@@ -1,0 +1,42 @@
+# Nginx logs
+access.log
+error.log
+*.log
+logs/
+
+# Nginx cache
+cache/
+fastcgi_cache/
+
+# SSL certificates (if any)
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Temporary files
+tmp/
+temp/
+
+# Backup configs
+*.bak
+*.backup
+nginx.conf.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Keep nginx.conf in git as it's the main configuration
