@@ -11,14 +11,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
+      - ./services/db:/docker-entrypoint-initdb.d
     networks:
       - app-network
 
   # Express TSOA API in Development Mode
   api-dev:
     build:
-      context: ./express-tsoa-api
+      context: ./services/api
       dockerfile: Dockerfile
       target: builder
     container_name: express-tsoa-api-dev
@@ -37,7 +37,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./express-tsoa-api:/app
+      - ./services/api:/app
       - /app/node_modules
     command: npm run dev:watch
     restart: unless-stopped

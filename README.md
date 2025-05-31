@@ -10,6 +10,31 @@ A containerized Express.js API built with TypeScript, TSOA, and PostgreSQL.
 - **Log Monitoring**: Dozzle for real-time container log viewing
 - **Documentation**: Auto-generated Swagger/OpenAPI docs
 
+## 📁 Project Structure
+
+```
+hackathon/
+├── services/
+│   ├── api/                 # Express TSOA API service
+│   │   ├── src/
+│   │   │   ├── controllers/
+│   │   │   ├── models/
+│   │   │   ├── services/
+│   │   │   └── routes/
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   ├── db/                  # Database initialization scripts
+│   │   └── 01-init.sql
+│   └── nginx/               # Nginx reverse proxy configuration
+│       └── nginx.conf
+├── scripts/                 # Testing and utility scripts
+│   ├── test-database-api.sh
+│   └── test-docker-setup.sh
+├── docker-compose.yml       # Production Docker Compose
+├── docker-compose.dev.yml   # Development Docker Compose
+└── Makefile                 # Build and deployment shortcuts
+```
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -48,7 +73,7 @@ A containerized Express.js API built with TypeScript, TSOA, and PostgreSQL.
 
 1. **Install dependencies:**
    ```bash
-   cd express-tsoa-api
+   cd services/api
    npm install
    ```
 
