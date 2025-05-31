@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './AIAssistantChat.css';
 
+// Extend Window interface for Speech Recognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'llm';
   timestamp: Date;
+  isVoiceMessage?: boolean;
 }
 
 interface AIAssistantChatProps {
@@ -28,11 +37,54 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [lastMessageWasVoice, setLastMessageWasVoice] = useState(false);
+  
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
+
+  useEffect(() => {
+    // Check if Speech Recognition is supported
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setSpeechSupported(true);
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setNewMessage(transcript);
+        setLastMessageWasVoice(true);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,10 +99,12 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       text: newMessage.trim(),
       sender: 'user',
       timestamp: new Date(),
+      isVoiceMessage: lastMessageWasVoice,
     };
 
     setChatMessages(prev => [...prev, userMessage]);
     setNewMessage('');
+    setLastMessageWasVoice(false);
     setChatLoading(true);
 
     // Call the optional callback
@@ -102,6 +156,40 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     return `${baseResponse} I can help you with troubleshooting, repair procedures, and technical guidance.`;
   };
 
+  const startVoiceRecording = async () => {
+    if (!speechSupported) {
+      alert('Speech recognition is not supported in your browser.');
+      return;
+    }
+
+    try {
+      if (recognitionRef.current && !isListening) {
+        recognitionRef.current.start();
+      }
+    } catch (error) {
+      console.error('Error starting voice recognition:', error);
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    setLastMessageWasVoice(false); // Reset voice flag when typing
+  };
+
+  const toggleVoiceRecording = () => {
+    if (isListening) {
+      stopVoiceRecording();
+    } else {
+      startVoiceRecording();
+    }
+  };
+
   const clearChat = () => {
     setChatMessages([]);
   };
@@ -143,7 +231,14 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
           {chatMessages.map(message => (
             <div key={message.id} className={`ai-chat-message ${message.sender}`}>
               <div className="ai-message-content">
-                <p>{message.text}</p>
+                <p>
+                  {message.isVoiceMessage && message.sender === 'user' && (
+                    <span className="voice-message-indicator" title="Voice message">
+                      🎤 
+                    </span>
+                  )}
+                  {message.text}
+                </p>
                 <span className="ai-message-time">
                   {message.timestamp.toLocaleTimeString()}
                 </span>
@@ -171,19 +266,42 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             <input
               type="text"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={placeholder}
+              onChange={handleInputChange}
+              placeholder={isListening ? "Listening..." : placeholder}
               className="ai-chat-input"
-              disabled={chatLoading}
+              disabled={chatLoading || isListening}
             />
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={toggleVoiceRecording}
+                className={`ai-chat-voice-button ${isListening ? 'listening' : ''}`}
+                disabled={chatLoading}
+                title={isListening ? "Stop listening" : "Start voice input"}
+              >
+                {isListening ? (
+                  <div className="voice-recording-indicator">
+                    <span className="pulse-dot"></span>
+                    🎤
+                  </div>
+                ) : (
+                  '🎤'
+                )}
+              </button>
+            )}
             <button 
               type="submit" 
               className="ai-chat-send-button"
-              disabled={chatLoading || !newMessage.trim()}
+              disabled={chatLoading || (!newMessage.trim() && !isListening)}
             >
               Send
             </button>
           </div>
+          {isListening && (
+            <div className="voice-status">
+              <span className="voice-status-text">🎤 Listening... Speak now</span>
+            </div>
+          )}
         </form>
       </div>
     </div>
