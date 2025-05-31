@@ -13,25 +13,14 @@ import {
     Query 
 } from 'tsoa';
 import { Ticket, CreateTicketRequest, UpdateTicketRequest } from '../models/Ticket';
-import { AIChatLog } from '../models/AIChatLog';
+import { AIChatLog, CreateAIChatLogRequest, CreateChatLogRequestBody } from '../models/AIChatLog';
 import { ticketDatabaseService } from '../services/TicketDatabaseService';
 import { AIChatLogService } from '../services/AIChatLogService';
 import { NotFoundError } from '../errors/HttpError';
 
-// Extended ticket interface to include AI chat logs
-export interface TicketWithChatLogs extends Ticket {
-    ai_chat_logs?: AIChatLog[];
-}
-
 @Route('technicians')
 @Tags('Technicians')
 export class TechnicianController extends Controller {
-    private aiChatLogService: AIChatLogService;
-
-    constructor() {
-        super();
-        this.aiChatLogService = new AIChatLogService();
-    }
 
     /**
      * Get all tickets assigned to a technician
@@ -45,14 +34,14 @@ export class TechnicianController extends Controller {
     }
 
     /**
-     * Get a specific ticket by ID (must belong to technician) with AI chat logs
+     * Get a specific ticket by ID (must belong to technician) - no chat logs
      */
     @Get('{technicianId}/tickets/{ticketId}')
     @Response(404, 'Ticket not found')
     public async getTicket(
         @Path() technicianId: number,
         @Path() ticketId: number
-    ): Promise<TicketWithChatLogs> {
+    ): Promise<Ticket> {
         const ticket = await ticketDatabaseService.getTicketById(ticketId);
         if (!ticket) {
             throw new NotFoundError('Ticket not found');
@@ -63,21 +52,7 @@ export class TechnicianController extends Controller {
             throw new NotFoundError('Ticket not found');
         }
 
-        // Fetch AI chat logs for this ticket
-        try {
-            await this.aiChatLogService.connect();
-            const chatLogs = await this.aiChatLogService.getChatLogsByTicketId(ticketId);
-            await this.aiChatLogService.disconnect();
-            
-            return {
-                ...ticket,
-                ai_chat_logs: chatLogs
-            };
-        } catch (error) {
-            console.error('Error fetching AI chat logs:', error);
-            // Return ticket without chat logs if there's an error
-            return ticket;
-        }
+        return ticket;
     }
 
     /**
@@ -131,7 +106,7 @@ export class TicketController extends Controller {
      */
     @Get('{id}')
     @Response(404, 'Ticket not found')
-    public async getTicket(@Path() id: number): Promise<TicketWithChatLogs> {
+    public async getTicket(@Path() id: number): Promise<Ticket> {
         const ticket = await ticketDatabaseService.getTicketById(id);
         if (!ticket) {
             throw new NotFoundError('Ticket not found');
@@ -191,5 +166,70 @@ export class TicketController extends Controller {
             throw new NotFoundError('Ticket not found');
         }
         return { message: 'Ticket deleted successfully' };
+    }
+
+    /**
+     * Get all chat logs for a specific ticket
+     */
+    @Get('{ticketId}/chat-logs')
+    @Response(404, 'Ticket not found')
+    public async getTicketChatLogs(
+        @Path() ticketId: number,
+        @Query() limit?: number,
+        @Query() offset?: number
+    ): Promise<AIChatLog[]> {
+        // First verify ticket exists
+        const ticket = await ticketDatabaseService.getTicketById(ticketId);
+        if (!ticket) {
+            throw new NotFoundError('Ticket not found');
+        }
+
+        // Fetch chat logs for this ticket
+        try {
+            await this.aiChatLogService.connect();
+            const chatLogs = await this.aiChatLogService.getChatLogsByTicketId(
+                ticketId, 
+                limit || 50, 
+                offset || 0
+            );
+            await this.aiChatLogService.disconnect();
+            return chatLogs;
+        } catch (error) {
+            console.error('Error fetching chat logs:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Add a new chat log to a specific ticket
+     */
+    @Post('{ticketId}/chat-logs')
+    @Response(404, 'Ticket not found')
+    public async addChatLogToTicket(
+        @Path() ticketId: number,
+        @Body() requestBody: CreateChatLogRequestBody
+    ): Promise<AIChatLog> {
+        // First verify ticket exists
+        const ticket = await ticketDatabaseService.getTicketById(ticketId);
+        if (!ticket) {
+            throw new NotFoundError('Ticket not found');
+        }
+
+        // Ensure the ticket_id in the request body matches the path parameter
+        const chatLogData: CreateAIChatLogRequest = {
+            ...requestBody,
+            ticket_id: ticketId
+        };
+
+        try {
+            await this.aiChatLogService.connect();
+            const chatLog = await this.aiChatLogService.createChatLog(chatLogData);
+            await this.aiChatLogService.disconnect();
+            this.setStatus(201);
+            return chatLog;
+        } catch (error) {
+            console.error('Error creating chat log:', error);
+            throw error;
+        }
     }
 }

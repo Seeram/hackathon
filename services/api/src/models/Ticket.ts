@@ -1,5 +1,7 @@
 // models/Ticket.ts
 
+import { AIChatLog } from './AIChatLog';
+
 export interface TicketAttachment {
     id: number;
     file_name: string;
@@ -21,6 +23,7 @@ export interface Ticket {
     created_at: Date;
     updated_at: Date;
     attachments?: TicketAttachment[];
+    ai_chat_logs?: AIChatLog[];
 }
 
 export interface CreateTicketRequest {

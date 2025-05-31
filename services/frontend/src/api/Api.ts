@@ -42,6 +42,21 @@ export interface VoiceRecordingResponse {
   [key: string]: any;
 }
 
+export interface AIChatLog {
+  /** @format double */
+  id: number;
+  /** @format double */
+  ticket_id: number;
+  message_type: AiChatLogMessageTypeEnum;
+  user_message: string;
+  ai_response: string;
+  voice_transcription?: string;
+  session_id?: string;
+  /** @format date-time */
+  created_at: string;
+  [key: string]: any;
+}
+
 export interface TicketAttachment {
   /** @format double */
   id: number;
@@ -70,6 +85,7 @@ export interface Ticket {
   /** @format date-time */
   updated_at: string;
   attachments?: TicketAttachment[];
+  ai_chat_logs?: AIChatLog[];
   [key: string]: any;
 }
 
@@ -100,7 +116,18 @@ export interface UpdateTicketRequest {
   [key: string]: any;
 }
 
+export interface CreateChatLogRequestBody {
+  message_type: CreateChatLogRequestBodyMessageTypeEnum;
+  user_message: string;
+  ai_response: string;
+  voice_transcription?: string;
+  session_id?: string;
+  [key: string]: any;
+}
+
 export type ChatMessageSenderEnum = "user" | "llm";
+
+export type AiChatLogMessageTypeEnum = "chat" | "voice" | "suggestion";
 
 export type TicketPriorityEnum = "low" | "medium" | "high" | "urgent";
 
@@ -127,6 +154,11 @@ export type UpdateTicketRequestStatusEnum =
   | "in_progress"
   | "completed"
   | "cancelled";
+
+export type CreateChatLogRequestBodyMessageTypeEnum =
+  | "chat"
+  | "voice"
+  | "suggestion";
 
 export interface ProcessVoiceRecordingPayload {
   /** @format binary */
@@ -168,6 +200,15 @@ export interface GetAllTicketsParams {
   /** @format double */
   technicianId?: number;
   priority?: string;
+}
+
+export interface GetTicketChatLogsParams {
+  /** @format double */
+  limit?: number;
+  /** @format double */
+  offset?: number;
+  /** @format double */
+  ticketId: number;
 }
 
 export namespace Tickets {
@@ -264,7 +305,7 @@ export namespace Tickets {
   }
 
   /**
-   * @description Get a specific ticket by ID
+   * @description Get a specific ticket by ID with AI chat logs
    * @tags Tickets
    * @name GetTicket
    * @request GET:/tickets/{id}
@@ -324,6 +365,94 @@ export namespace Tickets {
       message: string;
     };
   }
+
+  /**
+   * @description Get all chat logs for a specific ticket
+   * @tags Tickets
+   * @name GetTicketChatLogs
+   * @request GET:/tickets/{ticketId}/chat-logs
+   * @response `200` `(AIChatLog)[]` Ok
+   * @response `404` `void` Ticket not found
+   */
+  export namespace GetTicketChatLogs {
+    export type RequestParams = {
+      /** @format double */
+      ticketId: number;
+    };
+    export type RequestQuery = {
+      /** @format double */
+      limit?: number;
+      /** @format double */
+      offset?: number;
+    };
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = AIChatLog[];
+  }
+
+  /**
+   * @description Add a new chat log to a specific ticket
+   * @tags Tickets
+   * @name AddChatLogToTicket
+   * @request POST:/tickets/{ticketId}/chat-logs
+   * @response `200` `AIChatLog` Ok
+   * @response `404` `void` Ticket not found
+   */
+  export namespace AddChatLogToTicket {
+    export type RequestParams = {
+      /** @format double */
+      ticketId: number;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = CreateChatLogRequestBody;
+    export type RequestHeaders = {};
+    export type ResponseBody = AIChatLog;
+  }
+}
+
+export namespace ChatLogs {
+  /**
+   * @description Get a specific chat log by ID
+   * @tags Chat Logs
+   * @name GetChatLog
+   * @request GET:/chat-logs/{chatLogId}
+   * @response `200` `AIChatLog` Ok
+   * @response `404` `void` Chat log not found
+   */
+  export namespace GetChatLog {
+    export type RequestParams = {
+      /** @format double */
+      chatLogId: number;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = AIChatLog;
+  }
+
+  /**
+ * @description Delete a specific chat log by ID
+ * @tags Chat Logs
+ * @name DeleteChatLog
+ * @request DELETE:/chat-logs/{chatLogId}
+ * @response `200` `{
+    message: string,
+
+}` Ok
+ * @response `404` `void` Chat log not found
+*/
+  export namespace DeleteChatLog {
+    export type RequestParams = {
+      /** @format double */
+      chatLogId: number;
+    };
+    export type RequestQuery = {};
+    export type RequestBody = never;
+    export type RequestHeaders = {};
+    export type ResponseBody = {
+      message: string;
+    };
+  }
 }
 
 export namespace Technicians {
@@ -348,7 +477,7 @@ export namespace Technicians {
   }
 
   /**
-   * @description Get a specific ticket by ID (must belong to technician)
+   * @description Get a specific ticket by ID (must belong to technician) - no chat logs
    * @tags Technicians
    * @name GetTicket
    * @request GET:/technicians/{technicianId}/tickets/{ticketId}
@@ -690,7 +819,7 @@ export class Api<
       }),
 
     /**
-     * @description Get a specific ticket by ID
+     * @description Get a specific ticket by ID with AI chat logs
      *
      * @tags Tickets
      * @name GetTicket
@@ -753,6 +882,93 @@ export class Api<
         format: "json",
         ...params,
       }),
+
+    /**
+     * @description Get all chat logs for a specific ticket
+     *
+     * @tags Tickets
+     * @name GetTicketChatLogs
+     * @request GET:/tickets/{ticketId}/chat-logs
+     * @response `200` `(AIChatLog)[]` Ok
+     * @response `404` `void` Ticket not found
+     */
+    getTicketChatLogs: (
+      { ticketId, ...query }: GetTicketChatLogsParams,
+      params: RequestParams = {},
+    ) =>
+      this.request<AIChatLog[], void>({
+        path: `/tickets/${ticketId}/chat-logs`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Add a new chat log to a specific ticket
+     *
+     * @tags Tickets
+     * @name AddChatLogToTicket
+     * @request POST:/tickets/{ticketId}/chat-logs
+     * @response `200` `AIChatLog` Ok
+     * @response `404` `void` Ticket not found
+     */
+    addChatLogToTicket: (
+      ticketId: number,
+      data: CreateChatLogRequestBody,
+      params: RequestParams = {},
+    ) =>
+      this.request<AIChatLog, void>({
+        path: `/tickets/${ticketId}/chat-logs`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+  };
+  chatLogs = {
+    /**
+     * @description Get a specific chat log by ID
+     *
+     * @tags Chat Logs
+     * @name GetChatLog
+     * @request GET:/chat-logs/{chatLogId}
+     * @response `200` `AIChatLog` Ok
+     * @response `404` `void` Chat log not found
+     */
+    getChatLog: (chatLogId: number, params: RequestParams = {}) =>
+      this.request<AIChatLog, void>({
+        path: `/chat-logs/${chatLogId}`,
+        method: "GET",
+        format: "json",
+        ...params,
+      }),
+
+    /**
+ * @description Delete a specific chat log by ID
+ *
+ * @tags Chat Logs
+ * @name DeleteChatLog
+ * @request DELETE:/chat-logs/{chatLogId}
+ * @response `200` `{
+    message: string,
+
+}` Ok
+ * @response `404` `void` Chat log not found
+ */
+    deleteChatLog: (chatLogId: number, params: RequestParams = {}) =>
+      this.request<
+        {
+          message: string;
+        },
+        void
+      >({
+        path: `/chat-logs/${chatLogId}`,
+        method: "DELETE",
+        format: "json",
+        ...params,
+      }),
   };
   technicians = {
     /**
@@ -776,7 +992,7 @@ export class Api<
       }),
 
     /**
-     * @description Get a specific ticket by ID (must belong to technician)
+     * @description Get a specific ticket by ID (must belong to technician) - no chat logs
      *
      * @tags Technicians
      * @name GetTicket

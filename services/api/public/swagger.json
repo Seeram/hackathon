@@ -95,6 +95,52 @@
 				"type": "object",
 				"additionalProperties": true
 			},
+			"AIChatLog": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"ticket_id": {
+						"type": "number",
+						"format": "double"
+					},
+					"message_type": {
+						"type": "string",
+						"enum": [
+							"chat",
+							"voice",
+							"suggestion"
+						]
+					},
+					"user_message": {
+						"type": "string"
+					},
+					"ai_response": {
+						"type": "string"
+					},
+					"voice_transcription": {
+						"type": "string"
+					},
+					"session_id": {
+						"type": "string"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": [
+					"id",
+					"ticket_id",
+					"message_type",
+					"user_message",
+					"ai_response",
+					"created_at"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
 			"TicketAttachment": {
 				"properties": {
 					"id": {
@@ -177,6 +223,12 @@
 					"attachments": {
 						"items": {
 							"$ref": "#/components/schemas/TicketAttachment"
+						},
+						"type": "array"
+					},
+					"ai_chat_logs": {
+						"items": {
+							"$ref": "#/components/schemas/AIChatLog"
 						},
 						"type": "array"
 					}
@@ -276,6 +328,37 @@
 						"format": "date-time"
 					}
 				},
+				"type": "object",
+				"additionalProperties": true
+			},
+			"CreateChatLogRequestBody": {
+				"properties": {
+					"message_type": {
+						"type": "string",
+						"enum": [
+							"chat",
+							"voice",
+							"suggestion"
+						]
+					},
+					"user_message": {
+						"type": "string"
+					},
+					"ai_response": {
+						"type": "string"
+					},
+					"voice_transcription": {
+						"type": "string"
+					},
+					"session_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message_type",
+					"user_message",
+					"ai_response"
+				],
 				"type": "object",
 				"additionalProperties": true
 			}
@@ -439,6 +522,84 @@
 				}
 			}
 		},
+		"/chat-logs/{chatLogId}": {
+			"get": {
+				"operationId": "GetChatLog",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AIChatLog"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Chat log not found"
+					}
+				},
+				"description": "Get a specific chat log by ID",
+				"tags": [
+					"Chat Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "chatLogId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DeleteChatLog",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Chat log not found"
+					}
+				},
+				"description": "Delete a specific chat log by ID",
+				"tags": [
+					"Chat Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "chatLogId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
 		"/technicians/{technicianId}/tickets": {
 			"get": {
 				"operationId": "GetTechnicianTickets",
@@ -507,7 +668,7 @@
 						"description": "Ticket not found"
 					}
 				},
-				"description": "Get a specific ticket by ID (must belong to technician)",
+				"description": "Get a specific ticket by ID (must belong to technician) - no chat logs",
 				"tags": [
 					"Technicians"
 				],
@@ -712,7 +873,7 @@
 						"description": "Ticket not found"
 					}
 				},
-				"description": "Get a specific ticket by ID",
+				"description": "Get a specific ticket by ID with AI chat logs",
 				"tags": [
 					"Tickets"
 				],
@@ -814,6 +975,107 @@
 						}
 					}
 				]
+			}
+		},
+		"/tickets/{ticketId}/chat-logs": {
+			"get": {
+				"operationId": "GetTicketChatLogs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/AIChatLog"
+									},
+									"type": "array"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Get all chat logs for a specific ticket",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "ticketId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "AddChatLogToTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AIChatLog"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Add a new chat log to a specific ticket",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "ticketId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateChatLogRequestBody"
+							}
+						}
+					}
+				}
 			}
 		}
 	},

@@ -20,6 +20,14 @@ export interface CreateAIChatLogRequest {
     session_id?: string;
 }
 
+export interface CreateChatLogRequestBody {
+    message_type: 'chat' | 'voice' | 'suggestion';
+    user_message: string;
+    ai_response: string;
+    voice_transcription?: string;
+    session_id?: string;
+}
+
 export interface AIChatLogQueryParams {
     ticket_id?: number;
     message_type?: 'chat' | 'voice' | 'suggestion';

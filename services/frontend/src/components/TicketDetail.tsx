@@ -3,6 +3,11 @@ import { ApiClient, Ticket } from '../api';
 import AIAssistantChat from './AIAssistantChat';
 import './TicketDetail.css';
 
+// Initialize API client outside the component to avoid recreation on every render
+const apiClient = new ApiClient({
+  baseURL: process.env.REACT_APP_API_URL || '/api',
+});
+
 interface TicketDetailProps {
   ticketId: number;
   onBack: () => void;
@@ -13,27 +18,23 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const apiClient = new ApiClient({
-    baseURL: process.env.REACT_APP_API_URL || '/api',
-  });
-
   useEffect(() => {
+    const loadTicketDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const ticketData = await apiClient.tickets.getTicket(ticketId);
+        setTicket(ticketData);
+      } catch (err) {
+        setError('Failed to load ticket details');
+        console.error('Error loading ticket:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadTicketDetails();
   }, [ticketId]);
-
-  const loadTicketDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const ticketData = await apiClient.tickets.getTicket(ticketId);
-      setTicket(ticketData);
-    } catch (err) {
-      setError('Failed to load ticket details');
-      console.error('Error loading ticket:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAIMessageSent = (message: string) => {
     console.log('AI message sent:', message);
@@ -161,6 +162,50 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticketId, onBack }) => {
                     📎 {attachment.file_name} ({attachment.file_type})
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {ticket.ai_chat_logs && ticket.ai_chat_logs.length > 0 && (
+            <div className="chat-history-section">
+              <h3>Chat History</h3>
+              <div className="chat-history-container">
+                {ticket.ai_chat_logs
+                  .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                  .map((chatLog) => (
+                    <div key={chatLog.id} className="chat-log-item">
+                      <div className="chat-timestamp">
+                        {new Date(chatLog.created_at).toLocaleString()}
+                        {chatLog.message_type === 'voice' && (
+                          <span className="message-type-badge voice">🎤 Voice</span>
+                        )}
+                        {chatLog.message_type === 'suggestion' && (
+                          <span className="message-type-badge suggestion">💡 Suggestion</span>
+                        )}
+                      </div>
+                      
+                      <div className="chat-messages">
+                        <div className="user-message">
+                          <div className="message-label">Customer:</div>
+                          <div className="message-content">
+                            {chatLog.user_message}
+                          </div>
+                          {chatLog.voice_transcription && chatLog.message_type === 'voice' && (
+                            <div className="voice-transcription">
+                              <small>Transcription: {chatLog.voice_transcription}</small>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="ai-message">
+                          <div className="message-label">AI Assistant:</div>
+                          <div className="message-content">
+                            {chatLog.ai_response}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

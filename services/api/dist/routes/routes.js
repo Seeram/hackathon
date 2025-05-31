@@ -8,6 +8,8 @@ const runtime_1 = require("@tsoa/runtime");
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 const AIAssistantController_1 = require("./../controllers/AIAssistantController");
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+const ChatLogController_1 = require("./../controllers/ChatLogController");
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 const TicketController_1 = require("./../controllers/TicketController");
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 const TicketController_2 = require("./../controllers/TicketController");
@@ -57,6 +59,21 @@ const models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AIChatLog": {
+        "dataType": "refObject",
+        "properties": {
+            "id": { "dataType": "double", "required": true },
+            "ticket_id": { "dataType": "double", "required": true },
+            "message_type": { "dataType": "union", "subSchemas": [{ "dataType": "enum", "enums": ["chat"] }, { "dataType": "enum", "enums": ["voice"] }, { "dataType": "enum", "enums": ["suggestion"] }], "required": true },
+            "user_message": { "dataType": "string", "required": true },
+            "ai_response": { "dataType": "string", "required": true },
+            "voice_transcription": { "dataType": "string" },
+            "session_id": { "dataType": "string" },
+            "created_at": { "dataType": "datetime", "required": true },
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "TicketAttachment": {
         "dataType": "refObject",
         "properties": {
@@ -84,6 +101,7 @@ const models = {
             "created_at": { "dataType": "datetime", "required": true },
             "updated_at": { "dataType": "datetime", "required": true },
             "attachments": { "dataType": "array", "array": { "dataType": "refObject", "ref": "TicketAttachment" } },
+            "ai_chat_logs": { "dataType": "array", "array": { "dataType": "refObject", "ref": "AIChatLog" } },
         },
         "additionalProperties": true,
     },
@@ -114,6 +132,18 @@ const models = {
             "customer_name": { "dataType": "string" },
             "customer_phone": { "dataType": "string" },
             "scheduled_date": { "dataType": "datetime" },
+        },
+        "additionalProperties": true,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateChatLogRequestBody": {
+        "dataType": "refObject",
+        "properties": {
+            "message_type": { "dataType": "union", "subSchemas": [{ "dataType": "enum", "enums": ["chat"] }, { "dataType": "enum", "enums": ["voice"] }, { "dataType": "enum", "enums": ["suggestion"] }], "required": true },
+            "user_message": { "dataType": "string", "required": true },
+            "ai_response": { "dataType": "string", "required": true },
+            "voice_transcription": { "dataType": "string" },
+            "session_id": { "dataType": "string" },
         },
         "additionalProperties": true,
     },
@@ -172,6 +202,40 @@ function RegisterRoutes(app) {
             validatedArgs = getValidatedArgs(args, request, response);
             const controller = new AIAssistantController_1.AIAssistantController();
             const promise = controller.getTicketSuggestions.apply(controller, validatedArgs);
+            promiseHandler(controller, promise, response, undefined, next);
+        }
+        catch (err) {
+            return next(err);
+        }
+    });
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    app.get('/api/chat-logs/:chatLogId', ...((0, runtime_1.fetchMiddlewares)(ChatLogController_1.ChatLogController)), ...((0, runtime_1.fetchMiddlewares)(ChatLogController_1.ChatLogController.prototype.getChatLog)), function ChatLogController_getChatLog(request, response, next) {
+        const args = {
+            chatLogId: { "in": "path", "name": "chatLogId", "required": true, "dataType": "double" },
+        };
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        let validatedArgs = [];
+        try {
+            validatedArgs = getValidatedArgs(args, request, response);
+            const controller = new ChatLogController_1.ChatLogController();
+            const promise = controller.getChatLog.apply(controller, validatedArgs);
+            promiseHandler(controller, promise, response, undefined, next);
+        }
+        catch (err) {
+            return next(err);
+        }
+    });
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    app.delete('/api/chat-logs/:chatLogId', ...((0, runtime_1.fetchMiddlewares)(ChatLogController_1.ChatLogController)), ...((0, runtime_1.fetchMiddlewares)(ChatLogController_1.ChatLogController.prototype.deleteChatLog)), function ChatLogController_deleteChatLog(request, response, next) {
+        const args = {
+            chatLogId: { "in": "path", "name": "chatLogId", "required": true, "dataType": "double" },
+        };
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        let validatedArgs = [];
+        try {
+            validatedArgs = getValidatedArgs(args, request, response);
+            const controller = new ChatLogController_1.ChatLogController();
+            const promise = controller.deleteChatLog.apply(controller, validatedArgs);
             promiseHandler(controller, promise, response, undefined, next);
         }
         catch (err) {
@@ -315,6 +379,43 @@ function RegisterRoutes(app) {
             validatedArgs = getValidatedArgs(args, request, response);
             const controller = new TicketController_2.TicketController();
             const promise = controller.deleteTicket.apply(controller, validatedArgs);
+            promiseHandler(controller, promise, response, undefined, next);
+        }
+        catch (err) {
+            return next(err);
+        }
+    });
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    app.get('/api/tickets/:ticketId/chat-logs', ...((0, runtime_1.fetchMiddlewares)(TicketController_2.TicketController)), ...((0, runtime_1.fetchMiddlewares)(TicketController_2.TicketController.prototype.getTicketChatLogs)), function TicketController_getTicketChatLogs(request, response, next) {
+        const args = {
+            ticketId: { "in": "path", "name": "ticketId", "required": true, "dataType": "double" },
+            limit: { "in": "query", "name": "limit", "dataType": "double" },
+            offset: { "in": "query", "name": "offset", "dataType": "double" },
+        };
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        let validatedArgs = [];
+        try {
+            validatedArgs = getValidatedArgs(args, request, response);
+            const controller = new TicketController_2.TicketController();
+            const promise = controller.getTicketChatLogs.apply(controller, validatedArgs);
+            promiseHandler(controller, promise, response, undefined, next);
+        }
+        catch (err) {
+            return next(err);
+        }
+    });
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    app.post('/api/tickets/:ticketId/chat-logs', ...((0, runtime_1.fetchMiddlewares)(TicketController_2.TicketController)), ...((0, runtime_1.fetchMiddlewares)(TicketController_2.TicketController.prototype.addChatLogToTicket)), function TicketController_addChatLogToTicket(request, response, next) {
+        const args = {
+            ticketId: { "in": "path", "name": "ticketId", "required": true, "dataType": "double" },
+            requestBody: { "in": "body", "name": "requestBody", "required": true, "ref": "CreateChatLogRequestBody" },
+        };
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        let validatedArgs = [];
+        try {
+            validatedArgs = getValidatedArgs(args, request, response);
+            const controller = new TicketController_2.TicketController();
+            const promise = controller.addChatLogToTicket.apply(controller, validatedArgs);
             promiseHandler(controller, promise, response, undefined, next);
         }
         catch (err) {

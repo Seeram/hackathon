@@ -194,4 +194,36 @@ export class AIChatLogService {
             throw error;
         }
     }
+
+    /**
+     * Get a specific chat log by ID
+     */
+    async getChatLogById(chatLogId: number): Promise<AIChatLog | null> {
+        try {
+            const result = await this.client.query(
+                'SELECT * FROM ai_chat_logs WHERE id = $1',
+                [chatLogId]
+            );
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error('Error fetching chat log by ID:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete a specific chat log by ID
+     */
+    async deleteChatLogById(chatLogId: number): Promise<boolean> {
+        try {
+            const result = await this.client.query(
+                'DELETE FROM ai_chat_logs WHERE id = $1',
+                [chatLogId]
+            );
+            return (result.rowCount || 0) > 0;
+        } catch (error) {
+            console.error('Error deleting chat log by ID:', error);
+            throw error;
+        }
+    }
 }
