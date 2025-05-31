@@ -92,7 +92,7 @@ fi
 
 # Test database content directly
 echo -e "${BLUE}Testing: Direct database query${NC}"
-db_content=$(docker exec express-tsoa-postgres psql -U postgres -d express_tsoa_api -c "SELECT id, title, author, created_at FROM posts ORDER BY created_at;" -t)
+db_content=$(docker exec postgres psql -U postgres -d api -c "SELECT id, title, author, created_at FROM posts ORDER BY created_at;" -t)
 echo -e "${GREEN}✅ Database content:${NC}"
 echo "$db_content"
 echo ""

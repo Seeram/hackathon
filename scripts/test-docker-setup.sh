@@ -42,7 +42,7 @@ echo
 
 # Test 7: Check database content
 echo "✅ Testing database connectivity and content:"
-docker compose exec postgres psql -U postgres -d express_tsoa_api -c "SELECT * FROM posts;"
+docker compose exec postgres psql -U postgres -d api -c "SELECT * FROM posts;"
 echo
 
 # Test 8: Container status

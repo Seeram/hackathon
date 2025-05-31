@@ -116,7 +116,7 @@ docker compose up --build api
 ### Connection Details
 - **Host**: localhost (or postgres in Docker)
 - **Port**: 5432
-- **Database**: express_tsoa_api
+- **Database**: api
 - **User**: postgres
 - **Password**: password
 
@@ -133,7 +133,7 @@ The database is automatically initialized with sample posts when started.
 | `PORT` | Server port | 3000 |
 | `DB_HOST` | Database host | localhost |
 | `DB_PORT` | Database port | 5432 |
-| `DB_NAME` | Database name | express_tsoa_api |
+| `DB_NAME` | Database name | api |
 | `DB_USER` | Database user | postgres |
 | `DB_PASSWORD` | Database password | password |
 

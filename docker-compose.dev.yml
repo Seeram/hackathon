@@ -2,9 +2,9 @@ services:
   # PostgreSQL Database for Development
   postgres:
     image: postgres:15-alpine
-    container_name: express-tsoa-postgres-dev
+    container_name: postgres-dev
     environment:
-      POSTGRES_DB: express_tsoa_api
+      POSTGRES_DB: api
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
@@ -21,13 +21,13 @@ services:
       context: ./services/api
       dockerfile: Dockerfile
       target: builder
-    container_name: express-tsoa-api-dev
+    container_name: api-dev
     environment:
       NODE_ENV: development
       PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: express_tsoa_api
+      DB_NAME: api
       DB_USER: postgres
       DB_PASSWORD: password
     ports:
@@ -45,15 +45,13 @@ services:
   # Dozzle - Docker Log Viewer for Development
   dozzle-dev:
     image: amir20/dozzle:latest
-    container_name: express-tsoa-dozzle-dev
+    container_name: dozzle-dev
     ports:
       - "9998:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       DOZZLE_LEVEL: debug
-      DOZZLE_TAILSIZE: 500
-      DOZZLE_FILTER: "name=express-tsoa"
     networks:
       - app-network
     restart: unless-stopped
