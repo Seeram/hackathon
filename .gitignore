@@ -125,5 +125,5 @@ coverage/
 .envrc
 *.wav
 *.mp3
-pdfs/
-.vectorstore/
+*/agents/data/
+__pycache__
