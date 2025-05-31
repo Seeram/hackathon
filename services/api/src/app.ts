@@ -3,8 +3,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import swaggerUi from 'swagger-ui-express';
 import { RegisterRoutes } from './routes/routes';
-import { databaseService } from './services/DatabaseService';
 import { HttpError } from './errors/HttpError';
+import { ticketDatabaseService } from './services/TicketDatabaseService';
 
 // Load environment variables
 dotenv.config();
@@ -62,7 +62,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Initialize database connection and start server
 async function startServer() {
   try {
-    await databaseService.connect();
+    await ticketDatabaseService.connect();
     
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
@@ -78,7 +78,8 @@ async function startServer() {
 process.on('SIGINT', async () => {
   console.log('\nShutting down gracefully...');
   try {
-    await databaseService.disconnect();
+    await ticketDatabaseService.disconnect();
+
     process.exit(0);
   } catch (error) {
     console.error('Error during shutdown:', error);
@@ -89,7 +90,8 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
   try {
-    await databaseService.disconnect();
+    await ticketDatabaseService.disconnect();
+
     process.exit(0);
   } catch (error) {
     console.error('Error during shutdown:', error);
