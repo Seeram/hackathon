@@ -3,8 +3,8 @@ from utils import timer
 
 with timer("whisper"):
     model = whisper.load_model("tiny", device="cuda")
-    result = model.transcribe("test_speech.wav", fp16=True, batch_size=16, condition_on_previous_text=False, language="en")
-    print(result)
+    result = model.transcribe("test_speech.wav", fp16=True, language="en", condition_on_previous_text=False)
+    print(result["text"])
 
     """ 
     # load audio and pad/trim it to fit 30 seconds
