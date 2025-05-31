@@ -123,3 +123,7 @@ coverage/
 
 .venv*
 .envrc
+*.wav
+*.mp3
+pdfs/
+.vectorstore/
