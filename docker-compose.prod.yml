@@ -36,11 +36,32 @@ services:
       DB_NAME: api
       DB_USER: postgres
       DB_PASSWORD: password
+      AGENTS_SERVICE_URL: http://agents:5000
     # Remove direct port exposure in production
     ports: []
     depends_on:
       postgres:
         condition: service_healthy
+      agents:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # AI Agents Service - internal only
+  agents:
+    build:
+      context: ./services/agents
+      dockerfile: Dockerfile
+    container_name: agents
+    environment:
+      FLASK_ENV: production
+      FLASK_APP: app.py
+    # Internal service - not exposed directly in production
+    ports: []
+    volumes:
+      - ./services/agents:/app
+      - /tmp:/tmp
     networks:
       - app-network
     restart: unless-stopped

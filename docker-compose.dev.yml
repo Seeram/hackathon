@@ -30,16 +30,37 @@ services:
       DB_NAME: api
       DB_USER: postgres
       DB_PASSWORD: password
+      AGENTS_SERVICE_URL: http://agents-dev:5000
     ports:
       - "3000:3000"
     depends_on:
       - postgres
+      - agents-dev
     networks:
       - app-network
     volumes:
       - ./services/api:/app
       - /app/node_modules
     command: npm run dev:watch
+    restart: unless-stopped
+
+  # AI Agents Service in Development Mode
+  agents-dev:
+    build:
+      context: ./services/agents
+      dockerfile: Dockerfile
+    container_name: agents-dev
+    environment:
+      FLASK_ENV: development
+      FLASK_APP: app.py
+      FLASK_DEBUG: 1
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./services/agents:/app
+      - /tmp:/tmp
+    networks:
+      - app-network
     restart: unless-stopped
 
   # React Frontend in Development Mode
