@@ -121,5 +121,5 @@ dist/
 # Test coverage
 coverage/
 
-.venv
+.venv*
 .envrc
