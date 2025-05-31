@@ -6,20 +6,76 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"PostModel": {
+			"TicketAttachment": {
 				"properties": {
 					"id": {
 						"type": "number",
 						"format": "double"
 					},
+					"file_name": {
+						"type": "string"
+					},
+					"file_type": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"file_name",
+					"file_type"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"Ticket": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"ticket_number": {
+						"type": "string"
+					},
 					"title": {
 						"type": "string"
 					},
-					"content": {
+					"description": {
 						"type": "string"
 					},
-					"author": {
+					"location": {
 						"type": "string"
+					},
+					"priority": {
+						"type": "string",
+						"enum": [
+							"low",
+							"medium",
+							"high",
+							"urgent"
+						]
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"assigned",
+							"in_progress",
+							"completed",
+							"cancelled"
+						]
+					},
+					"assigned_technician_id": {
+						"type": "number",
+						"format": "double"
+					},
+					"customer_name": {
+						"type": "string"
+					},
+					"customer_phone": {
+						"type": "string"
+					},
+					"scheduled_date": {
+						"type": "string",
+						"format": "date-time"
 					},
 					"created_at": {
 						"type": "string",
@@ -28,51 +84,111 @@
 					"updated_at": {
 						"type": "string",
 						"format": "date-time"
+					},
+					"attachments": {
+						"items": {
+							"$ref": "#/components/schemas/TicketAttachment"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
 					"id",
+					"ticket_number",
 					"title",
-					"content",
-					"author"
+					"priority",
+					"status",
+					"assigned_technician_id",
+					"created_at",
+					"updated_at"
 				],
 				"type": "object",
 				"additionalProperties": true
 			},
-			"CreatePostRequest": {
+			"CreateTicketRequest": {
 				"properties": {
 					"title": {
 						"type": "string"
 					},
-					"content": {
+					"description": {
 						"type": "string"
 					},
-					"author": {
+					"location": {
 						"type": "string"
+					},
+					"priority": {
+						"type": "string",
+						"enum": [
+							"low",
+							"medium",
+							"high",
+							"urgent"
+						]
+					},
+					"assigned_technician_id": {
+						"type": "number",
+						"format": "double"
+					},
+					"customer_name": {
+						"type": "string"
+					},
+					"customer_phone": {
+						"type": "string"
+					},
+					"scheduled_date": {
+						"type": "string",
+						"format": "date-time"
 					}
 				},
 				"required": [
 					"title",
-					"content",
-					"author"
+					"assigned_technician_id"
 				],
 				"type": "object",
 				"additionalProperties": true
 			},
-			"Partial_CreatePostRequest_": {
+			"UpdateTicketRequest": {
 				"properties": {
 					"title": {
 						"type": "string"
 					},
-					"content": {
+					"description": {
 						"type": "string"
 					},
-					"author": {
+					"location": {
 						"type": "string"
+					},
+					"priority": {
+						"type": "string",
+						"enum": [
+							"low",
+							"medium",
+							"high",
+							"urgent"
+						]
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"assigned",
+							"in_progress",
+							"completed",
+							"cancelled"
+						]
+					},
+					"customer_name": {
+						"type": "string"
+					},
+					"customer_phone": {
+						"type": "string"
+					},
+					"scheduled_date": {
+						"type": "string",
+						"format": "date-time"
 					}
 				},
 				"type": "object",
-				"description": "Make all properties in T optional"
+				"additionalProperties": true
 			}
 		},
 		"securitySchemes": {}
@@ -84,9 +200,9 @@
 	},
 	"openapi": "3.0.0",
 	"paths": {
-		"/posts": {
+		"/technicians/{technicianId}/tickets": {
 			"get": {
-				"operationId": "GetPosts",
+				"operationId": "GetTechnicianTickets",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -94,7 +210,7 @@
 							"application/json": {
 								"schema": {
 									"items": {
-										"$ref": "#/components/schemas/PostModel"
+										"$ref": "#/components/schemas/Ticket"
 									},
 									"type": "array"
 								}
@@ -102,69 +218,74 @@
 						}
 					}
 				},
+				"description": "Get all tickets assigned to a technician",
 				"tags": [
-					"Posts"
-				],
-				"security": [],
-				"parameters": []
-			},
-			"post": {
-				"operationId": "CreatePost",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/PostModel"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Posts"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreatePostRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/posts/{id}": {
-			"get": {
-				"operationId": "GetPost",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/PostModel"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Post not found"
-					}
-				},
-				"tags": [
-					"Posts"
+					"Technicians"
 				],
 				"security": [],
 				"parameters": [
 					{
 						"in": "path",
-						"name": "id",
+						"name": "technicianId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"assigned",
+								"in_progress",
+								"completed",
+								"cancelled"
+							]
+						}
+					}
+				]
+			}
+		},
+		"/technicians/{technicianId}/tickets/{ticketId}": {
+			"get": {
+				"operationId": "GetTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ticket"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Get a specific ticket by ID (must belong to technician)",
+				"tags": [
+					"Technicians"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "technicianId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "path",
+						"name": "ticketId",
 						"required": true,
 						"schema": {
 							"format": "double",
@@ -172,52 +293,11 @@
 						}
 					}
 				]
-			},
-			"put": {
-				"operationId": "UpdatePost",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/PostModel"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Post not found"
-					}
-				},
-				"tags": [
-					"Posts"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/Partial_CreatePostRequest_"
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"operationId": "DeletePost",
+			}
+		},
+		"/technicians/{technicianId}/tickets/{ticketId}/status": {
+			"patch": {
+				"operationId": "UpdateTicketStatus",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -238,11 +318,250 @@
 						}
 					},
 					"404": {
-						"description": "Post not found"
+						"description": "Ticket not found"
 					}
 				},
+				"description": "Update ticket status",
 				"tags": [
-					"Posts"
+					"Technicians"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "technicianId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "path",
+						"name": "ticketId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"status": {
+										"type": "string",
+										"enum": [
+											"assigned",
+											"in_progress",
+											"completed",
+											"cancelled"
+										]
+									}
+								},
+								"required": [
+									"status"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tickets": {
+			"get": {
+				"operationId": "GetAllTickets",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Ticket"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all tickets",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "technicianId",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "priority",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ticket"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new ticket",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateTicketRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/tickets/{id}": {
+			"get": {
+				"operationId": "GetTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ticket"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Get a specific ticket by ID",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "UpdateTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Ticket"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Update a ticket",
+				"tags": [
+					"Tickets"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateTicketRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Ticket not found"
+					}
+				},
+				"description": "Delete a ticket",
+				"tags": [
+					"Tickets"
 				],
 				"security": [],
 				"parameters": [

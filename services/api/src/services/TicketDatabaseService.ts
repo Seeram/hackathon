@@ -72,6 +72,58 @@ export class TicketDatabaseService {
         }
     }
 
+    // Get all tickets (admin view)
+    async getAllTickets(status?: string, technicianId?: number, priority?: string): Promise<Ticket[]> {
+        try {
+            let query = `
+                SELECT 
+                    t.*,
+                    COALESCE(
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'id', att.id,
+                                'file_name', att.file_name,
+                                'file_type', att.file_type
+                            )
+                        ) FILTER (WHERE att.id IS NOT NULL), 
+                        '[]'::json
+                    ) as attachments
+                FROM tickets t
+                LEFT JOIN ticket_attachments att ON t.id = att.ticket_id
+                WHERE 1=1
+            `;
+            
+            const params: any[] = [];
+            let paramCount = 1;
+            
+            if (status) {
+                query += ` AND t.status = $${paramCount}`;
+                params.push(status);
+                paramCount++;
+            }
+            
+            if (technicianId) {
+                query += ` AND t.assigned_technician_id = $${paramCount}`;
+                params.push(technicianId);
+                paramCount++;
+            }
+            
+            if (priority) {
+                query += ` AND t.priority = $${paramCount}`;
+                params.push(priority);
+                paramCount++;
+            }
+            
+            query += ' GROUP BY t.id ORDER BY t.created_at DESC';
+
+            const result = await this.client.query(query, params);
+            return result.rows;
+        } catch (error) {
+            console.error('Error fetching all tickets:', error);
+            throw error;
+        }
+    }
+
     // Get a specific ticket by ID
     async getTicketById(id: number): Promise<Ticket | null> {
         try {

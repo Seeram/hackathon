@@ -1,0 +1,82 @@
+.App {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.App-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 20px 0;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.App-header h1 {
+  margin: 0 0 20px 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.nav-tab {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-tab:first-child {
+  border-top-left-radius: 8px;
+}
+
+.nav-tab:last-child {
+  border-top-right-radius: 8px;
+}
+
+.nav-tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nav-tab.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-bottom-color: #fff;
+}
+
+@media (max-width: 768px) {
+  .nav-tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .nav-tab {
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .nav-tab:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-tab.active {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 3px solid #fff;
+  }
+}
+
+main {
+  padding: 0;
+}

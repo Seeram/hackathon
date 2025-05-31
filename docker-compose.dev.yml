@@ -42,6 +42,29 @@ services:
     command: npm run dev:watch
     restart: unless-stopped
 
+  # React Frontend in Development Mode
+  frontend-dev:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: frontend-dev
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api-dev
+    networks:
+      - app-network
+    volumes:
+      - ./services/frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
   # Dozzle - Docker Log Viewer for Development
   dozzle-dev:
     image: amir20/dozzle:latest
