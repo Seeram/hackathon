@@ -1,5 +1,48 @@
+import os
+
 import whisper
 import torch
+import PyPDF2
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
+
+def extract_pdf_text(pdf_path):
+    pages = []
+    with open(pdf_path, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        for page_num in range(len(reader.pages)):
+            text = reader.pages[page_num].extract_text()
+            if text.strip():  # Skip empty pages
+                pages.append({
+                    "content": text,
+                    "metadata": {"source": pdf_path, "page": page_num + 1}
+                })
+    return pages
+
+def split_pages(pages):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=100
+    )
+    documents = []
+    for page in pages:
+        chunks = text_splitter.create_documents(
+            [page["content"]],
+            metadatas=[page["metadata"]]
+        )
+        documents.extend(chunks)
+    return documents
+
+def process_pdf_directory(directory):
+    all_pages = []
+    for file in os.listdir(directory):
+        if file.lower().endswith('.pdf'):
+            pdf_path = os.path.join(directory, file)
+            all_pages.extend(extract_pdf_text(pdf_path))
+    return all_pages
 
 def process_image():
     pass
@@ -17,6 +60,7 @@ def process_speech(user_input, mock=True):
     # TODO Should we use another LLM for reasoning...
 
     output = user_input if mock else None
+
     assert output is not None
     return output
 
@@ -37,9 +81,9 @@ def process_dialogue(user_input, mock=True):
             case "image":
                 pass
             case "speech":
-                user_input_speech = model.transcribe(user_input, 
+                user_input_speech = model.transcribe(user_input,
                                                      fp16=True,
-                                                     language="en", 
+                                                     language="en",
                                                      condition_on_previous_text=False)
                 output = process_speech(user_input_speech)
             case None:
