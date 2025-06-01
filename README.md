@@ -2,6 +2,8 @@
 
 A full-stack application with AI-powered agents, built with containerized microservices architecture.
 
+[**Live Demo**](http://65.108.32.137/)
+
 ## 🏗️ Technical Architecture
 
 This project follows a microservices architecture with the following components:
