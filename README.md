@@ -1,6 +1,8 @@
 # Hackathon Project
 
-A full-stack application with AI-powered agents, built with containerized microservices architecture.
+A full-stack application with AI-powered agents, built with containerized microservices architecture
+
+Make sure you access website through http and not https
 
 [**Live Demo**](http://65.108.32.137/)
 
