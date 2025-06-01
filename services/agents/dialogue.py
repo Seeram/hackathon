@@ -75,7 +75,7 @@ def process_dialogue(user_input_filepath, mock=True):
     # Receive input from user, which could be speech or image
     # model = whisper.load_model("tiny", device=device)
     output = None
-    transcribe_endpoint = "http://localhost:8000/transcribe"
+    transcribe_endpoint = "http://transcribe_service:8001/transcribe"
 
     while user_input_filepath:
         # Ensure modality = text or image
@@ -88,7 +88,6 @@ def process_dialogue(user_input_filepath, mock=True):
                 #                                      fp16=True,
                 #                                      language="en",
                 #                                      condition_on_previous_text=False)
-
                 user_input_speech = requests.post(transcribe_endpoint, files={"file": open(user_input_filepath, "rb")}).json()["text"]
                 output = process_speech(user_input_speech)
             case None:
