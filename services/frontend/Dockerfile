@@ -8,8 +8,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code
+# Copy source code and public files
+COPY public ./public
+COPY src ./src
+COPY tsconfig.json ./
 COPY . .
+
+# Verify public/index.html exists before building
+RUN ls -la public/
 
 # Build the application
 RUN npm run build
@@ -26,6 +32,9 @@ FROM node:18-alpine AS development
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+COPY public ./public
+COPY src ./src
+COPY tsconfig.json ./
 COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]
