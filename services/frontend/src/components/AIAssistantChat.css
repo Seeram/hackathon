@@ -360,6 +360,42 @@
   opacity: 0.6;
 }
 
+/* PDF reference links */
+.pdf-reference-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 2px 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.2);
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.pdf-reference-link:hover {
+  background: rgba(0, 123, 255, 0.2);
+  border-color: rgba(0, 123, 255, 0.4);
+  color: #0056b3;
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.pdf-reference-link:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 123, 255, 0.2);
+}
+
+.message-text {
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
 /* Compact mode */
 .ai-assistant-chat.compact {
   height: 400px;

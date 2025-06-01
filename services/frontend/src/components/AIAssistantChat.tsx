@@ -33,6 +33,68 @@ const apiClient = new ApiClient({
   timeout: 30000,
 });
 
+// Utility function to parse and render PDF references
+const renderMessageWithPDFLinks = (content: string) => {
+  // Regular expression to match markdown-style links with PDF anchors
+  const pdfLinkRegex = /\[([^\]]+)\]\(([^)]+\.pdf(?:#page=\d+)?)\)/g;
+  
+  // Split content by lines first to preserve line breaks
+  const lines = content.split('\n');
+  
+  return lines.map((line, lineIndex) => {
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    
+    // Reset regex for each line
+    pdfLinkRegex.lastIndex = 0;
+
+    while ((match = pdfLinkRegex.exec(line)) !== null) {
+      // Add text before the link
+      if (match.index > lastIndex) {
+        parts.push(line.substring(lastIndex, match.index));
+      }
+      
+      // Add the clickable PDF link
+      const linkText = match[1];
+      const pdfPath = match[2];
+      const onClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        // Open PDF in new tab with page anchor
+        window.open(pdfPath, '_blank');
+      };
+      
+      parts.push(
+        <a
+          key={`${lineIndex}-${match.index}`}
+          href={pdfPath}
+          onClick={onClick}
+          className="pdf-reference-link"
+          title={`Open ${linkText} in new tab`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          📄 {linkText}
+        </a>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < line.length) {
+      parts.push(line.substring(lastIndex));
+    }
+    
+    return (
+      <div key={lineIndex}>
+        {parts.length > 1 ? parts : line}
+        {lineIndex < lines.length - 1 && <br />}
+      </div>
+    );
+  });
+};
+
 const AIAssistantChat: React.FC<AIAssistantChatProps> = ({ 
   ticketId,
   onMessageSent,
@@ -249,7 +311,9 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
         {messages.map((message) => (
           <div key={message.id} className={`ai-chat-message ${message.type}`}>
             <div className="ai-message-content">
-              {message.content}
+              <div className="message-text">
+                {renderMessageWithPDFLinks(message.content)}
+              </div>
               {message.isVoice && <span className="voice-message-indicator">🎤</span>}
             </div>
             <div className="ai-message-time">

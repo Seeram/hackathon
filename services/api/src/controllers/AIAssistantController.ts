@@ -222,6 +222,30 @@ export class AIAssistantController extends Controller {
     }
 
     /**
+     * Generate random page number for PDF references
+     */
+    private getRandomPage(): number {
+        // Assuming the PDF has approximately 300 pages
+        return Math.floor(Math.random() * 300) + 1;
+    }
+
+    /**
+     * Add additional random PDF references to a response
+     */
+    private addAdditionalPDFReferences(): string {
+        const additionalRefs = [
+            `\n📄 **Additional References:**\n[Quick Reference Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Essential Information`,
+            `\n📖 **See Also:**\n[Technical Appendix](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Detailed Specifications`,
+            `\n🔧 **Related Information:**\n[Best Practices Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Professional Tips`,
+            `\n⚡ **Quick Access:**\n[Emergency Procedures](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Critical Information`,
+            `\n📋 **Cross-Reference:**\n[Index and Glossary](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Terms and Definitions`,
+            `` // Sometimes no additional reference
+        ];
+        
+        return additionalRefs[Math.floor(Math.random() * additionalRefs.length)];
+    }
+
+    /**
      * Generate AI response based on user input
      */
     private generateAIResponse(userText: string, ticketId?: number): string {
@@ -230,41 +254,41 @@ export class AIAssistantController extends Controller {
             {
                 pattern: /troubleshoot|problem|issue|error|fault/i,
                 responses: [
-                    `For the issue you've described ("${userText}"), I recommend starting with basic diagnostics. First, check power connections and status indicators.`,
-                    `Based on "${userText}", this appears to be a common troubleshooting scenario. Let me guide you through the standard diagnostic procedure.`,
-                    `I understand you're experiencing "${userText}". Let's begin with systematic troubleshooting to identify the root cause.`
+                    `For the issue you've described ("${userText}"), I recommend starting with basic diagnostics. First, check power connections and status indicators.\n\n📋 **Reference Documentation:**\n[Equipment Diagnostics Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 3.1: Initial Diagnostic Procedures`,
+                    `Based on "${userText}", this appears to be a common troubleshooting scenario. Let me guide you through the standard diagnostic procedure.\n\n📋 **Reference Documentation:**\n[Troubleshooting Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 4: Common Issues Resolution`,
+                    `I understand you're experiencing "${userText}". Let's begin with systematic troubleshooting to identify the root cause.\n\n📋 **Reference Documentation:**\n[System Diagnostic Procedures](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 7.2: Root Cause Analysis`
                 ]
             },
             {
                 pattern: /repair|fix|replace|maintenance/i,
                 responses: [
-                    `For the repair you mentioned ("${userText}"), I'll provide step-by-step guidance. Please ensure you have proper safety equipment before proceeding.`,
-                    `Regarding the repair of "${userText}", here's the recommended procedure from our technical documentation.`,
-                    `The repair process for "${userText}" typically involves several steps. Let me walk you through the proper sequence.`
+                    `For the repair you mentioned ("${userText}"), I'll provide step-by-step guidance. Please ensure you have proper safety equipment before proceeding.\n\n📋 **Reference Documentation:**\n[Repair Procedures Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 8.3: Component Replacement Guidelines`,
+                    `Regarding the repair of "${userText}", here's the recommended procedure from our technical documentation.\n\n📋 **Reference Documentation:**\n[Technical Service Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 12: Maintenance Procedures`,
+                    `The repair process for "${userText}" typically involves several steps. Let me walk you through the proper sequence.\n\n📋 **Reference Documentation:**\n[Step-by-Step Repair Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 10.1: Sequential Repair Process`
                 ]
             },
             {
                 pattern: /parts|component|spare|inventory/i,
                 responses: [
-                    `For the parts inquiry about "${userText}", I can help you identify the correct components and part numbers.`,
-                    `Regarding parts for "${userText}", let me check our inventory database for availability and specifications.`,
-                    `The components you mentioned in "${userText}" are available. Here are the part details and ordering information.`
+                    `For the parts inquiry about "${userText}", I can help you identify the correct components and part numbers.\n\n📋 **Reference Documentation:**\n[Parts Catalog](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 15.2: Component Specifications and Part Numbers`,
+                    `Regarding parts for "${userText}", let me check our inventory database for availability and specifications.\n\n📋 **Reference Documentation:**\n[Inventory Management Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 6: Parts Availability and Ordering`,
+                    `The components you mentioned in "${userText}" are available. Here are the part details and ordering information.\n\n📋 **Reference Documentation:**\n[Component Specifications](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 11.4: Detailed Part Information`
                 ]
             },
             {
                 pattern: /safety|precaution|warning|hazard/i,
                 responses: [
-                    `Safety is paramount when dealing with "${userText}". Please review all safety protocols before proceeding.`,
-                    `For the safety concern about "${userText}", here are the essential precautions and protective measures.`,
-                    `Regarding the safety aspects of "${userText}", always follow lockout/tagout procedures and wear appropriate PPE.`
+                    `Safety is paramount when dealing with "${userText}". Please review all safety protocols before proceeding.\n\n📋 **Reference Documentation:**\n[Safety Procedures Handbook](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 2: Equipment Safety Protocols`,
+                    `For the safety concern about "${userText}", here are the essential precautions and protective measures.\n\n📋 **Reference Documentation:**\n[Workplace Safety Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 4.1: Hazard Prevention and PPE Requirements`,
+                    `Regarding the safety aspects of "${userText}", always follow lockout/tagout procedures and wear appropriate PPE.\n\n📋 **Reference Documentation:**\n[LOTO Procedures Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 1.3: Lockout/Tagout Implementation`
                 ]
             },
             {
                 pattern: /manual|documentation|guide|instruction/i,
                 responses: [
-                    `I can provide detailed documentation for "${userText}". Let me reference the latest technical manuals.`,
-                    `For the procedure you asked about ("${userText}"), here's the step-by-step guide from our documentation.`,
-                    `The manual for "${userText}" contains specific instructions. I'll extract the relevant sections for you.`
+                    `I can provide detailed documentation for "${userText}". Let me reference the latest technical manuals.\n\n📋 **Reference Documentation:**\n[Technical Documentation Index](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 1.1: Manual Reference Guide`,
+                    `For the procedure you asked about ("${userText}"), here's the step-by-step guide from our documentation.\n\n📋 **Reference Documentation:**\n[Operating Procedures Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 8: Standard Operating Procedures`,
+                    `The manual for "${userText}" contains specific instructions. I'll extract the relevant sections for you.\n\n📋 **Reference Documentation:**\n[Equipment Manual Library](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 13.2: Equipment-Specific Instructions`
                 ]
             }
         ];
@@ -277,21 +301,24 @@ export class AIAssistantController extends Controller {
             const randomIndex = Math.floor(Math.random() * matchedResponse.responses.length);
             baseResponse = matchedResponse.responses[randomIndex];
         } else {
-            // Default responses
+            // Default responses with PDF references
             const defaultResponses = [
-                `I understand you're asking about: "${userText}". Let me help you with that.`,
-                `Based on your question about "${userText}", here are some recommendations...`,
-                `Regarding "${userText}" - I can provide technical guidance and assistance.`,
-                `Thank you for your question about "${userText}". Here's what I can help you with...`
+                `I understand you're asking about: "${userText}". Let me help you with that.\n\n📋 **Reference Documentation:**\n[General Maintenance Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Introduction to Equipment Maintenance`,
+                `Based on your question about "${userText}", here are some recommendations...\n\n📋 **Reference Documentation:**\n[Technical Reference Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 2.5: General Technical Guidelines`,
+                `Regarding "${userText}" - I can provide technical guidance and assistance.\n\n📋 **Reference Documentation:**\n[Technical Support Handbook](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 1: Getting Started with Technical Support`,
+                `Thank you for your question about "${userText}". Here's what I can help you with...\n\n📋 **Reference Documentation:**\n[User Support Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 1.4: Common Questions and Answers`
             ];
             baseResponse = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
         }
         
+        // Add additional random PDF references sometimes
+        const additionalRefs = this.addAdditionalPDFReferences();
+        
         if (ticketId) {
-            return `${baseResponse}\n\nThis guidance is specifically for ticket #${ticketId}. I can provide more detailed, context-specific assistance based on the ticket information.`;
+            return `${baseResponse}${additionalRefs}\n\nThis guidance is specifically for ticket #${ticketId}. I can provide more detailed, context-specific assistance based on the ticket information.`;
         }
         
-        return `${baseResponse}\n\nI can help you with troubleshooting, repair procedures, technical documentation, and safety guidance.`;
+        return `${baseResponse}${additionalRefs}`;
     }
 
     /**
@@ -342,7 +369,10 @@ export class AIAssistantController extends Controller {
 **4. Resolution Strategy**
 - Calibrate pressure instruments if readings are inconsistent
 - Replace faulty pressure relief valves or regulators as needed
-- Document all findings and corrective actions taken`,
+- Document all findings and corrective actions taken
+
+📋 **Reference Documentation:**
+[Pressure Systems Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 5: Pressure Diagnostics and Safety`,
 
             "motor": `For motor-related noise and startup issues, follow this diagnostic protocol:
 
@@ -364,7 +394,10 @@ export class AIAssistantController extends Controller {
 **4. Mechanical Inspection**
 - Examine bearing condition and lubrication
 - Check coupling alignment and belt tension
-- Inspect motor mount and foundation integrity`,
+- Inspect motor mount and foundation integrity
+
+📋 **Reference Documentation:**
+[Motor Diagnostics Guide](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Section 6.3: Motor Troubleshooting Procedures`,
 
             "filter": `Filter replacement and system reset procedure:
 
@@ -387,7 +420,10 @@ export class AIAssistantController extends Controller {
 - Remove all lockout/tagout devices
 - Follow proper startup sequence
 - Monitor system parameters during initial operation
-- Document completion and any observations`
+- Document completion and any observations
+
+📋 **Reference Documentation:**
+[Filter Maintenance Manual](/pdfs/manual.pdf#page=${this.getRandomPage()}) - Chapter 9: Filter Replacement Procedures`
         };
 
         const transcriptionIndex = audioFile.size % mockTranscriptions.length;
@@ -459,9 +495,13 @@ export class AIAssistantController extends Controller {
             sources: mockSources.length
         });
 
+        // Add random PDF references to voice responses
+        const additionalRefs = this.addAdditionalPDFReferences();
+        const enhancedResponse = `${response}${additionalRefs}\n\n${ticketId ? `**For Ticket #${ticketId}**: ` : ''}This guidance is based on industry best practices and equipment manufacturer recommendations.`;
+
         return {
             transcription,
-            response: `${response}\n\n${ticketId ? `**For Ticket #${ticketId}**: ` : ''}This guidance is based on industry best practices and equipment manufacturer recommendations.`,
+            response: enhancedResponse,
             confidence,
             sources: mockSources,
             processingTime: 2.3,
