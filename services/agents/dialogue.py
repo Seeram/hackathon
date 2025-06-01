@@ -27,6 +27,7 @@ def process_speech(user_input, mock=True):
     # payload = {"text": user_input}
     # response = requests.post(embedding_endpoint, json=payload).json()
     # embedding = response["embeddings"] # list
+    planning_endpoint = "http://planning_service:8002/plan"
 
     output = search_pdfs(user_input)
     search_results = []
@@ -34,11 +35,10 @@ def process_speech(user_input, mock=True):
         search_results.append({"pdf": f"{os.path.basename(source)}", "page": f"{page}"})
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
-
-    # TODO Should we use another LLM for reasoning...
+    plan = requests.post(planning_endpoint, json={"context": "you are a good emacs user", "instruction": "prepare a plan for someone to start emacs, via a good config file"}).json()["plan"]
 
     assert output is not None
-    return search_results
+    return plan
 
 def process_modality(user_input):
     # TODO Match on filetype

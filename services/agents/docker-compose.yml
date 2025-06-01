@@ -9,12 +9,15 @@ services:
     depends_on:
       - embedding_service
       - transcribe_service
+      - planning_service
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=app_llm.py
       - EMBEDDING_SERVICE_HOST=embedding_service
       - EMBEDDING_SERVICE_PORT=8000
       - TRANSCRIBE_SERVICE_HOST=transcribe_service
       - TRANSCRIBE_SERVICE_PORT=8001
+      - PLANNING_SERVICE_HOST=planning_service
+      - PLANNING_SERVICE_PORT=8002
     volumes:
       - .:/app
 
@@ -31,3 +34,20 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8001:8001"
+
+  planning_service:
+    build:
+      context: ./planning_service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+

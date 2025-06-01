@@ -1,6 +1,14 @@
 # Hackathon Project
 
-A full-stack application with AI-powered agents, built with containerized microservices architecture.
+A full-stack application with AI-powered agents, built with containerized microservices architecture
+
+Make sure you access website through http and not https
+
+[**Live Demo**](http://65.108.32.137/)
+
+DisPatcher supports maintenance workers from start to finish. It provides job details and checklists upfront, answers questions on site using a vector database of embedded manuals, returning is going to be PDFs in response at the relevant page. It also simplifies reporting by auto-generating post-job summaries from audio transcriptions and logged data.
+
+![Screenshot of main user interface](assets/dispatcher_demo.png)
 
 ## 🏗️ Technical Architecture
 
