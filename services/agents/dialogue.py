@@ -34,7 +34,13 @@ def process_speech(user_input, mock=True):
     for content, source, page in output:
         search_results.append({"pdf": f"{os.path.basename(source)}", "page": f"{page}"})
 
-    plan = requests.post(planning_endpoint, files={"context": "you are a good emacs user", "instruction": "prepare a plan for someone to start emacs, via a good config file"}).json()["plan"]
+    plan = requests.post(
+        planning_endpoint,
+        json={
+            "context": "you are a good emacs user",
+            "instruction": "prepare a plan for someone to start emacs, via a good config file"
+        }
+    ).json()["plan"]
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
 
