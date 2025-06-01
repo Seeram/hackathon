@@ -1,12 +1,9 @@
 import os
 import requests
 
-import whisper
 import torch
-import PyPDF2
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
 
@@ -25,21 +22,19 @@ def search_pdfs(query, save_path="data/vectorstore", k=3):
 def process_speech(user_input, mock=True):
     # Receive speech input from user
     # Ideally perform planning
+
+    # Compute embeddings, perform semantic search
     # embedding_endpoint = "http://embedding_service:8000/embed"
-
-    # TODO Compute embeddings, perform semantic search
-
     # payload = {"text": user_input}
     # response = requests.post(embedding_endpoint, json=payload).json()
     # embedding = response["embeddings"] # list
+
     output = search_pdfs(user_input)
     search_results = []
     for content, source, page in output:
         search_results.append({"pdf": f"{os.path.basename(source)}", "page": f"{page}"})
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
-
-    # TODO Return PDF name and page number if relevant
 
     # TODO Should we use another LLM for reasoning...
 
@@ -65,6 +60,7 @@ def process_dialogue(user_input_filepath, mock=True):
                 user_input_image = None
                 pass
             case "speech":
+                # TODO Currently limited to speech of 30s
                 user_input_speech = requests.post(transcribe_endpoint, files={"file": open(user_input_filepath, "rb")}).json()["text"]
                 output = process_speech(user_input_speech)
             case None:
