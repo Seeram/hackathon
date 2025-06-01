@@ -17,6 +17,13 @@ services:
       - TRANSCRIBE_SERVICE_PORT=8001
     volumes:
       - .:/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   embedding_service:
     build:
