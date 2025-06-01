@@ -4,8 +4,10 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
+# 1. Setup embeddings model
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
+# 2. Extract text from PDFs with page information
 def extract_pdf_text(pdf_path):
     pages = []
     with open(pdf_path, 'rb') as file:
@@ -41,7 +43,8 @@ def split_pages(pages):
         documents.extend(chunks)
     return documents
 
-def build_vector_store(documents, save_path="../data/vectorstore"):
+
+def build_vector_store(documents, save_path="data/vectorstore"):
     vector_store = Chroma.from_documents(
         documents,
         embeddings,
@@ -49,7 +52,7 @@ def build_vector_store(documents, save_path="../data/vectorstore"):
     )
     return vector_store
 
-def search_pdfs(query, save_path="../data/vectorstore", k=3):
+def search_pdfs(query, save_path="data/vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embeddings
@@ -58,15 +61,25 @@ def search_pdfs(query, save_path="../data/vectorstore", k=3):
     return [(result.page_content, result.metadata["source"], result.metadata["page"])
             for result in results]
 
+# Example usage:
+# 1. Ingest PDFs
+# pages = process_pdf_directory("path/to/pdfs")
+# documents = split_pages(pages)
+# build_vector_store(documents)
+
+# 2. Search (later)
+# results = search_pdfs("your search query")
+# for content, source, page in results:
+#     print(f"PDF: {os.path.basename(source)}, Page: {page}")
+#     print(f"Content: {content[:100]}...\n")
+
 if __name__ == "__main__":
-    """
     script_dir = os.path.dirname(__file__)
     py_dir = os.path.dirname(script_dir)
     pdfs_dir = os.path.join(py_dir, "data/pdfs")
     pages = process_pdf_directory(pdfs_dir)
     documents = split_pages(pages)
     build_vector_store(documents)
-    """
 
     query = input("Enter query: ") # "How to finalize the commisioning for MR elevators"
     results = search_pdfs(f"{query}")

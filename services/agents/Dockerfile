@@ -18,5 +18,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Run with Flask's development server for auto-reload
-# CMD ["python", "-m", "flask", "run", "--app", "app.py",  "--host=0.0.0.0", "--port=5000", "--debug"]
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--debug"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--debug"]
