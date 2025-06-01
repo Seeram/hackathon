@@ -1,321 +1,158 @@
-# Express TSOA API with Docker
+# Hackathon Project
 
-A containerized Express.js API built with TypeScript, TSOA, and PostgreSQL.
+A full-stack application with AI-powered agents, built with containerized microservices architecture.
 
-## 🏗️ Architecture
+## 🏗️ Technical Architecture
 
-- **API Service**: Express.js with TSOA for TypeScript-first API development
-- **Database**: PostgreSQL 15 with automatic initialization
-- **Reverse Proxy**: Nginx for load balancing and routing
+This project follows a microservices architecture with the following components:
+
+- **Frontend Service**: React TypeScript application with voice recording capabilities
+- **API Service**: Express.js with TSOA for type-safe API development
+- **Agents Service**: Python-based AI service with speech recognition and PDF processing
+- **Database Service**: PostgreSQL 15 with automatic schema initialization
+- **Reverse Proxy**: Nginx for routing and load balancing
 - **Log Monitoring**: Dozzle for real-time container log viewing
-- **Documentation**: Auto-generated Swagger/OpenAPI docs
 
 ## 📁 Project Structure
 
 ```
 hackathon/
 ├── services/
-│   ├── api/                 # Express TSOA API service
+│   ├── api/                    # Express TSOA API service (Node.js/TypeScript)
 │   │   ├── src/
-│   │   │   ├── controllers/
-│   │   │   ├── models/
-│   │   │   ├── services/
-│   │   │   └── routes/
+│   │   │   ├── controllers/    # API route controllers
+│   │   │   ├── models/         # Data models and types
+│   │   │   ├── services/       # Business logic services
+│   │   │   └── routes/         # Auto-generated TSOA routes
 │   │   ├── Dockerfile
 │   │   └── package.json
-│   ├── db/                  # Database initialization scripts
-│   │   └── 01-init.sql
-│   └── nginx/               # Nginx reverse proxy configuration
-│       └── nginx.conf
-├── scripts/                 # Testing and utility scripts
-│   ├── test-database-api.sh
-│   └── test-docker-setup.sh
-├── docker-compose.yml       # Production Docker Compose
-├── docker-compose.dev.yml   # Development Docker Compose
-└── Makefile                 # Build and deployment shortcuts
+│   ├── frontend/               # React TypeScript frontend
+│   │   ├── src/
+│   │   │   ├── components/     # React components
+│   │   │   ├── api/           # API client code
+│   │   │   └── types/         # TypeScript type definitions
+│   │   ├── Dockerfile
+│   │   └── package.json
+│   ├── agents/                 # Python AI agents service
+│   │   ├── app.py             # Main Flask/FastAPI application
+│   │   ├── dialogue.py        # AI dialogue handling
+│   │   ├── embedding_service/  # PDF embedding microservice
+│   │   ├── transcribe_service/ # Speech transcription microservice
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   ├── db/                    # Database initialization
+│   │   ├── 01-init.sql        # Schema setup
+│   │   └── 02-ai-chat-logs.sql # AI chat logging tables
+│   └── nginx/                 # Reverse proxy configuration
+│       ├── nginx.conf         # Nginx routing configuration
+│       └── public/            # Static assets
+├── scripts/                   # Automation and testing scripts
+│   ├── deploy-prod.sh         # Production deployment
+│   ├── backup-database.sh     # Database backup utilities
+│   └── test-*.sh             # Integration test scripts
+├── backups/                   # Database backup storage
+├── docker-compose.yml         # Base Docker Compose configuration
+├── docker-compose.dev.yml     # Development environment overrides
+├── docker-compose.prod.yml    # Production environment overrides
+└── Makefile                   # Build and deployment shortcuts
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose installed
+- Docker and Docker Compose
 - Node.js 18+ (for local development)
+- Python 3.9+ (for agents service development)
 
-### Running with Docker Compose
+### Environment Setup
 
-**Development Mode (with direct service access):**
+**Development Mode (direct service access):**
 ```bash
 make dev
 # or
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-**Production Mode (everything behind reverse proxy):**
+**Production Mode (reverse proxy routing):**
 ```bash
 make prod
 # or
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-**Standard mode:**
+**Standard Mode:**
 ```bash
 docker compose up -d
 ```
 
-### Available Endpoints
+### Service Endpoints
 
 **Development Mode:**
-- **API**: http://localhost:3001 (direct access)
-- **Frontend**: http://localhost:3000 (direct access)
-- **Swagger Documentation**: http://localhost:3001/api-docs
-- **Health Check**: http://localhost:3001/health
-- **Nginx Proxy**: http://localhost:8081 (reverse proxy)
-- **Dozzle Logs**: http://localhost:9999 (real-time log viewer)
+- **Frontend**: http://localhost:3000 (React development server)
+- **API**: http://localhost:3001 (Express API with Swagger docs)
+- **Agents**: http://localhost:5000 (Python AI service)
+- **Nginx Proxy**: http://localhost:8081 (reverse proxy entry point)
+- **Dozzle Logs**: http://localhost:9999 (container log viewer)
 
 **Production Mode:**
-- **Application**: http://localhost (all traffic through nginx reverse proxy)
-- **API**: http://localhost/api (proxied through nginx)
-- **Swagger Documentation**: http://localhost/api-docs (proxied through nginx)
-- **Health Check**: http://localhost/health (proxied through nginx)
-- **Dozzle Logs**: http://localhost:9999 (log viewer)
+- **Application**: http://localhost (all traffic routed through Nginx)
+- **API Docs**: http://localhost/api-docs (Swagger documentation)
+- **Health Check**: http://localhost/health
+- **Dozzle Logs**: http://localhost:9999
 
 ## 🛠️ Development
 
-### Local Development Setup
+### Service-Specific Development
 
-1. **Install dependencies:**
-   ```bash
-   cd services/api
-   npm install
-   ```
+Each service can be developed independently. See individual service README files:
 
-2. **Start PostgreSQL with Docker:**
-   ```bash
-   docker compose up postgres -d
-   ```
+- [`services/api/README.md`](services/api/README.md) - API service setup and development
+- [`services/frontend/README.md`](services/frontend/README.md) - Frontend development guide
+- [`services/agents/README.md`](services/agents/README.md) - AI agents service setup
 
-3. **Copy environment file:**
-   ```bash
-   cp .env.local .env
-   ```
-
-4. **Run development server:**
-   ```bash
-   npm run dev
-   ```
-
-### Docker Commands
+### Database Management
 
 ```bash
-# Build only the API service
-docker compose build api
-
-# Start only database
-docker compose up postgres -d
-
-# View database logs
-docker compose logs postgres
-
-# Execute commands in running container
-docker compose exec api npm run migrate
-
-# Rebuild and restart API
-docker compose up --build api
-```
-
-## 📊 Database
-
-### Connection Details
-- **Host**: localhost (or postgres in Docker)
-- **Port**: 5432
-- **Database**: api
-- **User**: postgres
-- **Password**: password
-
-### Sample Data
-The database is automatically initialized with sample posts when started.
-
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode | development |
-| `PORT` | Server port | 3000 |
-| `DB_HOST` | Database host | localhost |
-| `DB_PORT` | Database port | 5432 |
-| `DB_NAME` | Database name | api |
-| `DB_USER` | Database user | postgres |
-| `DB_PASSWORD` | Database password | password |
-
-### Docker Compose Services
-
-- **postgres**: PostgreSQL database with persistent volume
-- **api**: Express.js API service
-- **nginx**: Reverse proxy (optional)
-
-## 🧪 Testing the API
-
-### Get All Posts
-**Development:**
-```bash
-curl http://localhost:3001/api/posts
-curl http://localhost:8081/api/posts
-```
-
-**Production:**
-```bash
-curl http://localhost/api/posts
-```
-
-### Create a Post
-**Development:**
-```bash
-curl -X POST http://localhost:3001/api/posts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": 1,
-    "title": "Test Post",
-    "content": "This is a test post"
-  }'
-```
-
-**Production:**
-```bash
-curl -X POST http://localhost/api/posts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id": 1,
-    "title": "Test Post",
-    "content": "This is a test post"
-  }'
-```
-
-### Health Check
-**Development:**
-```bash
-curl http://localhost:3001/health
-curl http://localhost:8081/health
-```
-
-**Production:**
-```bash
-curl http://localhost/health
-```
-
-## 📝 Available Scripts
-
-```bash
-# Development
-npm run dev              # Start development server
-npm run dev:watch        # Start with auto-reload
-
-# Build
-npm run build           # Build for production
-npm run start           # Start production server
-
-# Database
-npm run migrate         # Run database migrations
-npm run migrate:rollback # Rollback migrations
-npm run seed:run        # Run database seeds
-
-# Documentation
-npm run swagger         # Generate Swagger docs
-```
-
-## 🐳 Production Deployment
-
-### Quick Commands
-
-```bash
-# Production deployment
-make prod-deploy        # Full production deployment
-make prod              # Start production environment
-make health            # Run health checks
-make backup            # Create database backup
-make restore BACKUP_FILE=database_backup_YYYYMMDD_HHMMSS.sql.gz
-
-# Monitoring
-make dozzle            # Open log viewer
-make logs              # View container logs
-```
-
-### Production Features
-
-1. **Automated Deployment**: Complete CI/CD-ready deployment scripts
-2. **Health Monitoring**: Comprehensive system health checks
-3. **Backup & Recovery**: Automated database backup and restore
-4. **Reverse Proxy**: Nginx with SSL-ready configuration
-5. **Log Management**: Real-time log monitoring with Dozzle
-6. **Resource Monitoring**: Container and system resource tracking
-
-### Security Considerations
-
-For production deployment, consider:
-
-1. **Environment Variables**: Use proper secrets management
-2. **Database**: Use managed PostgreSQL service
-3. **SSL**: Add HTTPS termination
-4. **Monitoring**: Add logging and monitoring solutions
-5. **Scaling**: Use container orchestration (Kubernetes, ECS, etc.)
-
-### Backup Strategy
-
-The system includes automated backup and restore capabilities:
-
-```bash
-# Create backup
-make backup
-
-# List available backups
-make restore
+# Backup database
+./scripts/backup-database.sh
 
 # Restore from backup
-make restore BACKUP_FILE=database_backup_20240531_123456.sql.gz
+./scripts/restore-database.sh <backup-file>
+
+# Health check all services
+./scripts/health-check.sh
 ```
 
-Backups are:
-- Automatically compressed
-- Timestamped for easy identification
-- Cleaned up automatically (keeps last 10)
-- Include complete database schema and data
+## 🧪 Testing
 
-## 🔍 Troubleshooting
-
-### Common Issues
-
-1. **Port conflicts**: Change ports in docker-compose.yml
-2. **Database connection**: Ensure PostgreSQL is healthy
-3. **Build failures**: Check Dockerfile and dependencies
-
-### Logs
 ```bash
-# View all service logs
-docker compose logs
+# Test all services
+./scripts/test-integration.sh
 
-# View specific service logs
-docker compose logs api
-docker compose logs postgres
+# Test specific components
+./scripts/test-api-docs.sh
+./scripts/test-database-api.sh
+./scripts/test-frontend-integration.sh
 ```
 
-## 📚 API Documentation
+## 🚀 Deployment
 
-Visit the following URLs for interactive Swagger documentation:
+```bash
+# Deploy to production
+./scripts/deploy-prod.sh
+```
 
-**Development:**
-- http://localhost:3001/api-docs (direct API access)
-- http://localhost:8081/api-docs (via nginx proxy)
+## 📖 Technology Stack
 
-**Production:**
-- http://localhost/api-docs (via nginx reverse proxy)
+- **Frontend**: React 19, TypeScript, Axios
+- **Backend API**: Express.js, TSOA, TypeScript, Swagger/OpenAPI
+- **AI Agents**: Python, Flask/FastAPI, Transformers, Whisper, LangChain
+- **Database**: PostgreSQL 15, Knex.js ORM
+- **Infrastructure**: Docker, Docker Compose, Nginx
+- **Monitoring**: Dozzle for logs
 
-## ✅ Production Readiness Checklist
 
-Your hackathon project now includes enterprise-grade production features:
-
-### 🏗️ Infrastructure
 - ✅ **Multi-container Docker setup** with docker-compose
 - ✅ **Nginx reverse proxy** for load balancing and routing
 - ✅ **Production and development environments** with separate configs

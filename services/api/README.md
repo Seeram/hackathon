@@ -1,54 +1,87 @@
-# Express TSOA API
+# API Service
 
-This project is a simple Express API built with TypeScript and TSOA. It demonstrates how to create a RESTful API with a focus on a basic post creation endpoint.
+Express.js REST API built with TypeScript and TSOA for type-safe development and automatic OpenAPI documentation generation.
 
-## Project Structure
+## Overview
 
-```
-express-tsoa-api
-├── src
-│   ├── app.ts                # Entry point of the application
-│   ├── controllers           # Contains the controllers for handling requests
-│   │   └── PostController.ts # Controller for post-related endpoints
-│   ├── models                # Contains the data models
-│   │   └── Post.ts           # Model defining the structure of a post
-│   ├── routes                # Contains the route definitions
-│   │   └── routes.ts         # Sets up the application routes
-│   └── types                 # Contains additional types and interfaces
-│       └── index.ts          # Type definitions used throughout the application
-├── package.json              # NPM configuration file
-├── tsconfig.json             # TypeScript configuration file
-├── tsoa.json                 # TSOA configuration file
-└── README.md                 # Project documentation
-```
+This service provides the backend API for the hackathon project with:
+- Type-safe API development using TSOA
+- Automatic Swagger/OpenAPI documentation
+- PostgreSQL database integration with Knex.js ORM
+- Comprehensive error handling and validation
+- Health check endpoints
 
-## Installation
+## Technology Stack
 
-To get started, clone the repository and install the dependencies:
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **API Documentation**: TSOA + Swagger UI
+- **Database**: PostgreSQL with Knex.js ORM
+- **Validation**: TSOA runtime validation
+- **Environment**: Docker containerized
+
+## Development
+
+### Local Setup
 
 ```bash
-git clone <repository-url>
-cd express-tsoa-api
+# Install dependencies
 npm install
-```
 
-## Running the Application
+# Generate API routes and documentation
+npm run swagger
 
-To run the application, use the following command:
+# Development with auto-reload
+npm run dev:watch
 
-```bash
+# Build for production
+npm run build
+
+# Start production server
 npm start
 ```
 
-The API will be available at `http://localhost:3000`.
+### API Documentation
+
+Once running, visit:
+- **Development**: http://localhost:3001/api-docs
+- **Production**: http://localhost/api-docs
+
+### Database Integration
+
+The API connects to PostgreSQL using Knex.js:
+- Schema initialization scripts in `/services/db/`
+- Database migrations and seeds supported
+- Connection pooling and health checks included
+
+### Docker Usage
+
+```bash
+# Build API container
+docker build -t api-service .
+
+# Run with Docker Compose
+docker compose up api
+```
 
 ## API Endpoints
 
-### Create Post
+- **Health Check**: `GET /health`
+- **API Documentation**: `GET /api-docs`
+- **Posts**: CRUD operations for posts
+- Additional endpoints auto-documented via Swagger
 
-- **Endpoint:** `POST /posts`
-- **Description:** Creates a new post.
-- **Request Body:**
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | development |
+| `PORT` | Server port | 3000 |
+| `DB_HOST` | Database host | postgres |
+| `DB_PORT` | Database port | 5432 |
+| `DB_NAME` | Database name | api |
+| `DB_USER` | Database user | postgres |
+| `DB_PASSWORD` | Database password | password |
   ```json
   {
     "title": "Post Title",
