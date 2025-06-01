@@ -51,8 +51,13 @@ def process_image():
 def process_speech(user_input, mock=True):
     # Receive speech input from user
     # Ideally perform planning
+    embedding_endpoint = "http://embedding_service:8000/embed"
 
     # TODO Compute embeddings, perform semantic search
+
+    payload = {"text": user_input}
+    response = requests.post(embedding_endpoint, json=payload).json()
+    embedding = response["embeddings"] # list
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
 
@@ -63,7 +68,7 @@ def process_speech(user_input, mock=True):
     output = user_input if mock else None
 
     assert output is not None
-    return output
+    return embedding
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -73,7 +78,6 @@ def process_modality(user_input):
 
 def process_dialogue(user_input_filepath, mock=True):
     # Receive input from user, which could be speech or image
-    # model = whisper.load_model("tiny", device=device)
     output = None
     transcribe_endpoint = "http://transcribe_service:8001/transcribe"
 
@@ -82,12 +86,9 @@ def process_dialogue(user_input_filepath, mock=True):
         modality = "speech" if mock else process_modality(user_input_filepath) # Some function of the user input
         match modality:
             case "image":
+                user_input_image = None
                 pass
             case "speech":
-                # user_input_speech = model.transcribe(user_input_filepath,
-                #                                      fp16=True,
-                #                                      language="en",
-                #                                      condition_on_previous_text=False)
                 user_input_speech = requests.post(transcribe_endpoint, files={"file": open(user_input_filepath, "rb")}).json()["text"]
                 output = process_speech(user_input_speech)
             case None:
