@@ -1,23 +1,18 @@
 from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 app = Flask(__name__)
 
 # Load model and tokenizer via Hugging Face Transformers
-model_name = "openchat/openchat-3.5-0106"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = "openchat/openchat-3.5-0106"
 
-quantization_config = BitsAndBytesConfig(load_in_8bit=True)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=quantization_config,
-    device_map="auto",
-)
+tokenizer = AutoTokenizer.from_pretrained(model)
+model = AutoModelForCausalLM.from_pretrained(model)
 generator = pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
-    device=0,  # or "auto"
+    device=0  # set to -1 for CPU, 0 for first CUDA GPU
 )
 
 def make_prompt(context, instruction):
