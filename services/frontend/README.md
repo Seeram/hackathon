@@ -1,46 +1,91 @@
-# Getting Started with Create React App
+# Frontend Service
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React TypeScript application with modern UI components and voice recording capabilities.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+This service provides the user interface for the hackathon project featuring:
+- Modern React 19 with TypeScript
+- Voice recording and playback functionality
+- API integration with auto-generated client
+- Responsive design with component-based architecture
+- Production-ready Docker deployment
 
-### `npm start`
+## Technology Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **Framework**: React 19
+- **Language**: TypeScript
+- **HTTP Client**: Axios
+- **Build Tool**: Create React App
+- **Testing**: Jest + React Testing Library
+- **Container**: Docker with Nginx
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Development
 
-### `npm test`
+### Local Setup
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# Install dependencies
+npm install
 
-### `npm run build`
+# Start development server
+npm start
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Run tests
+npm test
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Build for production
+npm run build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### API Integration
 
-### `npm run eject`
+The frontend integrates with the backend API:
+- Auto-generated API client from OpenAPI specs
+- Type-safe API calls with TypeScript
+- Error handling and loading states
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Development Server
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **URL**: http://localhost:3000
+- **Hot Reload**: Enabled for development
+- **Proxy**: API calls proxied to backend service
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### Docker Usage
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+# Build frontend container
+docker build -t frontend-service .
 
-## Learn More
+# Run with Docker Compose
+docker compose up frontend
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Features
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **Voice Recording**: Record and playback audio
+- **API Integration**: Real-time data from backend
+- **Responsive UI**: Mobile-friendly design
+- **Type Safety**: Full TypeScript support
+- **Error Handling**: Comprehensive error boundaries
+
+## Build & Deployment
+
+### Development Build
+```bash
+npm start
+```
+
+### Production Build
+```bash
+npm run build
+```
+
+The build artifacts are served by Nginx in production mode through the reverse proxy setup.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REACT_APP_API_URL` | Backend API URL | "" (relative) |
+| `NODE_ENV` | Environment mode | development |
