@@ -4,7 +4,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 app = Flask(__name__)
 
 # Load model and tokenizer via Hugging Face Transformers
-model = "meta-llama/Llama-2-7b-chat-hf"  # Or another supported local model
+model = "openchat/openchat-3.5-0106"
+
 tokenizer = AutoTokenizer.from_pretrained(model)
 model = AutoModelForCausalLM.from_pretrained(model)
 generator = pipeline(

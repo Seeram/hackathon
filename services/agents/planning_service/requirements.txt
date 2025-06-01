@@ -1,2 +1,4 @@
+torch
 transformers
 PyPDF2
+flask
