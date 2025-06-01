@@ -48,16 +48,26 @@ def process_pdf_directory(directory):
 def process_image():
     pass
 
+def search_pdfs(query, save_path="../data/vectorstore", k=3):
+    vector_store = Chroma(
+        persist_directory=save_path,
+        embedding_function=embeddings
+    )
+    results = vector_store.similarity_search(query, k=k)
+    return [(result.page_content, result.metadata["source"], result.metadata["page"])
+            for result in results]
+
 def process_speech(user_input, mock=True):
     # Receive speech input from user
     # Ideally perform planning
-    embedding_endpoint = "http://embedding_service:8000/embed"
+    # embedding_endpoint = "http://embedding_service:8000/embed"
 
     # TODO Compute embeddings, perform semantic search
 
-    payload = {"text": user_input}
-    response = requests.post(embedding_endpoint, json=payload).json()
-    embedding = response["embeddings"] # list
+    # payload = {"text": user_input}
+    # response = requests.post(embedding_endpoint, json=payload).json()
+    # embedding = response["embeddings"] # list
+    output = search_pdfs(user_input)
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
 
@@ -65,10 +75,8 @@ def process_speech(user_input, mock=True):
 
     # TODO Should we use another LLM for reasoning...
 
-    output = user_input if mock else None
-
     assert output is not None
-    return embedding
+    return output
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
