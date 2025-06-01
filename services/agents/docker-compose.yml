@@ -10,7 +10,7 @@ services:
       - embedding_service
       - transcribe_service
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=app_llm.py
       - EMBEDDING_SERVICE_HOST=embedding_service
       - EMBEDDING_SERVICE_PORT=8000
       - TRANSCRIBE_SERVICE_HOST=transcribe_service
