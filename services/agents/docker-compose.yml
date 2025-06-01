@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - embedding_service
+      - transcribe_service
+    environment:
+      - EMBEDDING_SERVICE_HOST=embedding_service
+      - EMBEDDING_SERVICE_PORT=9000
+      - TRANSCRIBE_SERVICE_HOST=transcribe_service
+      - TRANSCRIBE_SERVICE_PORT=9001
+
+  embedding_service:
+    build:
+      context: ./embedding_service
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+
+  embedding_service:
+    build:
+      context: ./transcribe_service
+      dockerfile: Dockerfile
+    ports:
+      - "9001:9001"

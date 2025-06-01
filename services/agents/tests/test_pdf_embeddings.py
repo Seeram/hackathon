@@ -21,7 +21,6 @@ def extract_pdf_text(pdf_path):
                 })
     return pages
 
-# The rest of the code remains the same
 def process_pdf_directory(directory):
     all_pages = []
     for file in os.listdir(directory):
@@ -38,7 +37,7 @@ def split_pages(pages):
     documents = []
     for page in pages:
         chunks = text_splitter.create_documents(
-            [page["content"]], 
+            [page["content"]],
             metadatas=[page["metadata"]]
         )
         documents.extend(chunks)
@@ -47,7 +46,7 @@ def split_pages(pages):
 
 def build_vector_store(documents, save_path="data/vectorstore"):
     vector_store = Chroma.from_documents(
-        documents, 
+        documents,
         embeddings,
         persist_directory=save_path
     )
@@ -59,7 +58,7 @@ def search_pdfs(query, save_path="data/vectorstore", k=3):
         embedding_function=embeddings
     )
     results = vector_store.similarity_search(query, k=k)
-    return [(result.page_content, result.metadata["source"], result.metadata["page"]) 
+    return [(result.page_content, result.metadata["source"], result.metadata["page"])
             for result in results]
 
 # Example usage:
@@ -81,7 +80,7 @@ if __name__ == "__main__":
     pages = process_pdf_directory(pdfs_dir)
     documents = split_pages(pages)
     build_vector_store(documents)
-    
+
     query = input("Enter query: ") # "How to finalize the commisioning for MR elevators"
     results = search_pdfs(f"{query}")
     for content, source, page in results:
