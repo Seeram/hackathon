@@ -13,7 +13,7 @@ embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
 def process_image():
     pass
 
-def search_pdfs(query, save_path="../data/vectorstore", k=3):
+def search_pdfs(query, save_path="data/vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embeddings
