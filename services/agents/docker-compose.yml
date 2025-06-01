@@ -10,10 +10,13 @@ services:
       - embedding_service
       - transcribe_service
     environment:
+      - FLASK_APP=app.py
       - EMBEDDING_SERVICE_HOST=embedding_service
       - EMBEDDING_SERVICE_PORT=9000
       - TRANSCRIBE_SERVICE_HOST=transcribe_service
       - TRANSCRIBE_SERVICE_PORT=9001
+    volumes:
+      - .:/app
 
   embedding_service:
     build:
@@ -22,7 +25,7 @@ services:
     ports:
       - "9000:9000"
 
-  embedding_service:
+  transcribe_service:
     build:
       context: ./transcribe_service
       dockerfile: Dockerfile
