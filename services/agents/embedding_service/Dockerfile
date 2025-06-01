@@ -5,6 +5,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY embeddings_service.py .
+COPY embedding_service.py .
 
-CMD ["python", "embeddings_service.py"]
+CMD ["python", "embedding_service.py"]
