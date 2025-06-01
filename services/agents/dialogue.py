@@ -1,4 +1,5 @@
 import os
+import requests
 
 import whisper
 import torch
@@ -70,25 +71,30 @@ def process_modality(user_input):
     # TODO Match on filetype
     pass
 
-def process_dialogue(user_input, mock=True):
+def process_dialogue(user_input_filepath, mock=True):
     # Receive input from user, which could be speech or image
-    model = whisper.load_model("tiny", device=device)
+    # model = whisper.load_model("tiny", device=device)
+    output = None
+    transcribe_endpoint = "http://localhost:8000/transcribe"
 
-    while user_input:
+    while user_input_filepath:
         # Ensure modality = text or image
-        modality = "speech" if mock else process_modality(user_input) # Some function of the user input
+        modality = "speech" if mock else process_modality(user_input_filepath) # Some function of the user input
         match modality:
             case "image":
                 pass
             case "speech":
-                user_input_speech = model.transcribe(user_input,
-                                                     fp16=True,
-                                                     language="en",
-                                                     condition_on_previous_text=False)
+                # user_input_speech = model.transcribe(user_input_filepath,
+                #                                      fp16=True,
+                #                                      language="en",
+                #                                      condition_on_previous_text=False)
+
+                user_input_speech = requests.post(transcribe_endpoint, files={"file": open(user_input_filepath, "rb")}).json()["text"]
                 output = process_speech(user_input_speech)
             case None:
                 pass
 
         # TODO Make proper dialogue loop
-        user_input = None
+        user_input_filepath = None
+    assert output is not None
     return output
