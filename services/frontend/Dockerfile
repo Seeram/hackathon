@@ -8,11 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and public files
-COPY public ./public
+# Ensure public directory exists
+RUN mkdir -p public
+
+# Copy source code
 COPY src ./src
 COPY tsconfig.json ./
-COPY . .
 
 # Verify public/index.html exists before building
 RUN ls -la public/
@@ -32,9 +33,11 @@ FROM node:18-alpine AS development
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-COPY public ./public
+
+# Ensure public directory exists
+RUN mkdir -p public
+
 COPY src ./src
 COPY tsconfig.json ./
-COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]
