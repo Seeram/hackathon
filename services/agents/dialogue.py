@@ -33,6 +33,9 @@ def process_speech(user_input, mock=True):
     # response = requests.post(embedding_endpoint, json=payload).json()
     # embedding = response["embeddings"] # list
     output = search_pdfs(user_input)
+    search_results = []
+    for content, source, page in output:
+        search_results.append({"pdf": f"{os.path.basename(source)}", "page": f"{page}"})
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
 
@@ -41,7 +44,7 @@ def process_speech(user_input, mock=True):
     # TODO Should we use another LLM for reasoning...
 
     assert output is not None
-    return output
+    return search_results
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
