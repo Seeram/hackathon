@@ -11,8 +11,6 @@
 # production
 /build
 
-# public folder - generated in Docker
-/public
 
 # misc
 .DS_Store
