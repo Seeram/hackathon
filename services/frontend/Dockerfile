@@ -8,9 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Ensure public directory exists with required index.html
-RUN mkdir -p public && \
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>React App</title></head><body><div id="root"></div></body></html>' > public/index.html
+# Copy public directory (contains index.html and other static assets)
+COPY public ./public
 
 # Copy source code
 COPY src ./src
@@ -35,9 +34,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Ensure public directory exists with required index.html
-RUN mkdir -p public && \
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>React App</title></head><body><div id="root"></div></body></html>' > public/index.html
+# Copy public directory (contains index.html and other static assets)
+COPY public ./public
 
 COPY src ./src
 COPY tsconfig.json ./
