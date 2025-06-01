@@ -38,6 +38,10 @@ interface VoiceRecordingResponse {
     message: string;
     transcription?: string;
     processedText?: string;
+    confidence?: number;
+    sources?: string[];
+    processingTime?: number;
+    fileInfo?: any;
 }
 
 @Route('tickets')
@@ -132,15 +136,10 @@ export class AIAssistantController extends Controller {
                 ticketId: ticketId || 'none'
             });
 
-            // TODO: Implement actual speech-to-text processing
-            // For now, return a simulated transcription
-            const simulatedTranscription = this.simulateTranscription(audioFile);
-            
-            // Generate AI response based on transcription
-            const aiResponse = this.generateAIResponse(
-                simulatedTranscription, 
-                ticketId ? parseInt(ticketId) : undefined
-            );
+            // Mock response from agents service
+            const agentsServiceResponse = this.getMockedAgentsServiceResponse(audioFile, ticketId);
+            const simulatedTranscription = agentsServiceResponse.transcription;
+            const aiResponse = agentsServiceResponse.response;
 
             // Log the voice interaction if ticket ID is provided
             if (ticketId) {
@@ -163,9 +162,13 @@ export class AIAssistantController extends Controller {
 
             return {
                 success: true,
-                message: 'Voice recording processed successfully',
+                message: agentsServiceResponse.response,
                 transcription: simulatedTranscription,
-                processedText: aiResponse
+                processedText: agentsServiceResponse.response,
+                confidence: agentsServiceResponse.confidence,
+                sources: agentsServiceResponse.sources,
+                processingTime: agentsServiceResponse.processingTime,
+                fileInfo: agentsServiceResponse.fileInfo
             };
 
         } catch (error) {
@@ -289,6 +292,181 @@ export class AIAssistantController extends Controller {
         }
         
         return `${baseResponse}\n\nI can help you with troubleshooting, repair procedures, technical documentation, and safety guidance.`;
+    }
+
+    /**
+     * Mock agents service response
+     * Simulates the response from the agents service with realistic data
+     */
+    private getMockedAgentsServiceResponse(audioFile: Express.Multer.File, ticketId?: string): {
+        transcription: string;
+        response: string;
+        confidence: number;
+        sources: string[];
+        processingTime: number;
+        fileInfo: any;
+    } {
+        // Mock transcription based on file characteristics
+        const mockTranscriptions = [
+            "Check the pressure readings on the main valve",
+            "The motor is making unusual noise during startup", 
+            "Replace the filter element and reset the system",
+            "What's the proper torque specification for this bolt",
+            "System shows error code E-204, need troubleshooting steps",
+            "How do I perform the monthly maintenance checklist",
+            "The equipment is overheating, need immediate assistance",
+            "Where can I find the wiring diagram for this component",
+            "I need help with the hydraulic pump troubleshooting",
+            "The conveyor belt is slipping and needs adjustment"
+        ];
+
+        // Mock AI responses based on transcription patterns
+        const mockResponses = {
+            "pressure": `Based on your pressure-related inquiry, here's a comprehensive diagnostic approach:
+
+**1. Initial Assessment**
+- Document current pressure readings and compare to specifications
+- Check system status indicators and pressure gauges
+- Verify operational parameters are within normal ranges
+
+**2. Systematic Diagnosis**
+- Inspect pressure relief valves and check valve settings
+- Test pressure sensors and instrumentation accuracy
+- Examine pump performance and flow characteristics
+
+**3. Safety Considerations**
+- Follow lockout/tagout procedures before any pressure system work
+- Use proper PPE including safety glasses and protective clothing
+- Ensure system is properly depressurized before maintenance
+
+**4. Resolution Strategy**
+- Calibrate pressure instruments if readings are inconsistent
+- Replace faulty pressure relief valves or regulators as needed
+- Document all findings and corrective actions taken`,
+
+            "motor": `For motor-related noise and startup issues, follow this diagnostic protocol:
+
+**1. Immediate Safety Check**
+- Ensure motor is properly grounded and electrical connections are secure
+- Verify lockout/tagout procedures are followed
+- Check for any obvious signs of overheating or damage
+
+**2. Acoustic Analysis**
+- Document the type of noise (grinding, squealing, knocking, etc.)
+- Note when noise occurs (startup, steady state, shutdown)
+- Use vibration analysis tools if available
+
+**3. Electrical Diagnostics**
+- Check motor current draw and compare to nameplate values
+- Verify voltage balance across all phases
+- Test insulation resistance and winding continuity
+
+**4. Mechanical Inspection**
+- Examine bearing condition and lubrication
+- Check coupling alignment and belt tension
+- Inspect motor mount and foundation integrity`,
+
+            "filter": `Filter replacement and system reset procedure:
+
+**1. Pre-Replacement Steps**
+- Identify correct filter type and part number
+- Gather required tools and safety equipment
+- Review system operating parameters before shutdown
+
+**2. Safe Shutdown Procedure**
+- Follow proper equipment shutdown sequence
+- Allow system to reach safe operating conditions
+- Implement lockout/tagout procedures
+
+**3. Filter Replacement**
+- Document old filter condition with photos
+- Install new filter with proper orientation
+- Ensure all seals and gaskets are properly seated
+
+**4. System Reset and Startup**
+- Remove all lockout/tagout devices
+- Follow proper startup sequence
+- Monitor system parameters during initial operation
+- Document completion and any observations`
+        };
+
+        const transcriptionIndex = audioFile.size % mockTranscriptions.length;
+        const transcription = mockTranscriptions[transcriptionIndex];
+        
+        // Determine response based on transcription content
+        let response = "I understand your maintenance request. Here's a comprehensive technical guidance:";
+        
+        if (transcription.toLowerCase().includes('pressure')) {
+            response = mockResponses.pressure;
+        } else if (transcription.toLowerCase().includes('motor') || transcription.toLowerCase().includes('noise')) {
+            response = mockResponses.motor;
+        } else if (transcription.toLowerCase().includes('filter') || transcription.toLowerCase().includes('replace')) {
+            response = mockResponses.filter;
+        } else {
+            // Default technical response
+            response = `Technical Analysis for: "${transcription}"
+
+**1. Safety First**
+- Follow all applicable safety procedures and standards
+- Use proper personal protective equipment (PPE)
+- Ensure proper lockout/tagout procedures are implemented
+
+**2. Diagnostic Approach**
+- Document current system conditions and symptoms
+- Review equipment documentation and service history
+- Follow systematic troubleshooting procedures
+
+**3. Technical Considerations**
+- Check all safety interlocks and protective devices
+- Verify proper operation of monitoring systems
+- Test system performance against specifications
+
+**4. Implementation**
+- Follow manufacturer's recommended procedures
+- Use proper tools and calibrated instruments
+- Document all work performed and findings
+
+**5. Verification**
+- Conduct proper testing after completion
+- Verify system operates within normal parameters
+- Update maintenance records and documentation`;
+        }
+
+        // Mock file processing info
+        const fileInfo = {
+            filename: audioFile.originalname,
+            size_bytes: audioFile.size,
+            mimetype: audioFile.mimetype,
+            processed_at: new Date().toISOString(),
+            duration_estimate: Math.floor(audioFile.size / 16000) // Rough estimate for audio duration
+        };
+
+        // Mock sources and confidence
+        const mockSources = [
+            "Equipment Technical Manual - Section 4.2",
+            "Safety Procedures Handbook - Chapter 7",
+            "Maintenance Best Practices Guide",
+            "Manufacturer Service Bulletin #2024-15"
+        ];
+
+        const confidence = 0.89 + (audioFile.size % 10) / 100; // Mock confidence between 0.89-0.98
+
+        console.log('🤖 Mocked Agents Service Response:', {
+            transcription: transcription.substring(0, 50) + '...',
+            confidence,
+            ticketId: ticketId || 'none',
+            processingTime: '~2.3s',
+            sources: mockSources.length
+        });
+
+        return {
+            transcription,
+            response: `${response}\n\n${ticketId ? `**For Ticket #${ticketId}**: ` : ''}This guidance is based on industry best practices and equipment manufacturer recommendations.`,
+            confidence,
+            sources: mockSources,
+            processingTime: 2.3,
+            fileInfo
+        };
     }
 
     /**

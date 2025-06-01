@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ApiClient, ChatRequest, ChatResponse, VoiceRecordingResponse, ProcessVoiceRecordingPayload } from '../api';
 import './AIAssistantChat.css';
 
@@ -56,7 +56,7 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     }
   }, [messages]);
 
-  const addMessage = (type: 'user' | 'assistant', content: string, isVoice: boolean = false) => {
+  const addMessage = useCallback((type: 'user' | 'assistant', content: string, isVoice: boolean = false) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       type,
@@ -65,7 +65,7 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       isVoice
     };
     setMessages(prev => [...prev, newMessage]);
-  };
+  }, []);
 
   const sendTextMessage = async () => {
     if (!inputText.trim()) return;
@@ -129,7 +129,7 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     }
   };
 
-  const processVoiceRecording = async () => {
+  const processVoiceRecording = useCallback(async () => {
     if (audioChunks.length === 0) return;
 
     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
@@ -149,6 +149,16 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
 
       const response: VoiceRecordingResponse = await apiClient.tickets.processVoiceRecording(payload);
       
+      // Log additional data from mocked agents service
+      console.log('🤖 Agents Service Response Data:', {
+        transcription: response.transcription,
+        confidence: response.confidence,
+        sources: response.sources,
+        processingTime: response.processingTime,
+        fileInfo: response.fileInfo,
+        success: response.success
+      });
+      
       // Add transcription as user message if available
       if (response.transcription) {
         // Replace the placeholder voice message with the actual transcription
@@ -161,8 +171,26 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
         );
       }
 
-      // Add assistant response
-      addMessage('assistant', response.message || 'Voice message processed successfully.');
+      // Create enhanced assistant response with agents service data
+      let assistantMessage = response.message || 'Voice message processed successfully.';
+      
+      // Add confidence and processing info if available
+      if (response.confidence && response.processingTime) {
+        assistantMessage += `\n\n📊 **Processing Details:**
+- Confidence: ${Math.round(response.confidence * 100)}%
+- Processing Time: ${response.processingTime}s`;
+      }
+      
+      // Add sources if available
+      if (response.sources && response.sources.length > 0) {
+        assistantMessage += `\n\n📚 **Referenced Sources:**`;
+        response.sources.forEach((source: string, index: number) => {
+          assistantMessage += `\n${index + 1}. ${source}`;
+        });
+      }
+
+      // Add assistant response with enhanced data
+      addMessage('assistant', assistantMessage);
     } catch (error) {
       console.error('Error processing voice message:', error);
       addMessage('assistant', 'Sorry, I had trouble processing your voice message. Please try again.');
@@ -170,13 +198,13 @@ const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
       setIsLoading(false);
       setAudioChunks([]);
     }
-  };
+  }, [audioChunks, addMessage, setIsLoading, ticketId, setMessages, setAudioChunks]);
 
   useEffect(() => {
     if (!isRecording && audioChunks.length > 0) {
       processVoiceRecording();
     }
-  }, [isRecording, audioChunks]);
+  }, [isRecording, audioChunks, processVoiceRecording]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

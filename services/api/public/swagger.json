@@ -86,7 +86,22 @@
 					},
 					"processedText": {
 						"type": "string"
-					}
+					},
+					"confidence": {
+						"type": "number",
+						"format": "double"
+					},
+					"sources": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"processingTime": {
+						"type": "number",
+						"format": "double"
+					},
+					"fileInfo": {}
 				},
 				"required": [
 					"success",
