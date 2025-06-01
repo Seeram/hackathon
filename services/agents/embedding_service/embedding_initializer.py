@@ -41,7 +41,7 @@ def split_pages(pages):
         documents.extend(chunks)
     return documents
 
-def build_vector_store(documents, save_path="data/vectorstore"):
+def build_vector_store(documents, save_path="../data/vectorstore"):
     vector_store = Chroma.from_documents(
         documents,
         embedder,
@@ -49,7 +49,7 @@ def build_vector_store(documents, save_path="data/vectorstore"):
     )
     return vector_store
 
-def search_pdfs(query, save_path="data/vectorstore", k=3):
+def search_pdfs(query, save_path="../data/vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embedder

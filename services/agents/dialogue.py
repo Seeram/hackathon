@@ -13,12 +13,13 @@ embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
 def process_image():
     pass
 
-def search_pdfs(query, save_path="../data/vectorstore", k=3):
+def search_pdfs(query, save_path="data/vectorstore", k=3):
     vector_store = Chroma(
         persist_directory=save_path,
         embedding_function=embeddings
     )
     results = vector_store.similarity_search(query, k=k)
+    return results
     return [(result.page_content, result.metadata["source"], result.metadata["page"])
             for result in results]
 
@@ -32,7 +33,7 @@ def process_speech(user_input, mock=True):
     # payload = {"text": user_input}
     # response = requests.post(embedding_endpoint, json=payload).json()
     # embedding = response["embeddings"] # list
-    output = search_pdfs(user_input)
+    output = search_pdfs(f"{user_input}")
 
     # TODO Perform planning, or maybe planning should be done at the beginning step?
 
