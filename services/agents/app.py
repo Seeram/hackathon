@@ -13,18 +13,18 @@ def health_check():
 def process_audio():
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
-    
+
     if file and file.filename.endswith('.wav'):
         # Save temporarily
         filepath = os.path.join('/tmp', file.filename)
         file.save(filepath)
 
-        transcription = process_dialogue(filepath)
-        
+        response = process_dialogue(filepath)
+
         # Just return file info for now
         file_info = {
             "filename": file.filename,
@@ -32,19 +32,18 @@ def process_audio():
             "save_path": filepath,
             "received_at": time.time()
         }
-        
+
         # Clean up
         os.remove(filepath)
 
         return jsonify({
-            "status": "success", 
-            "transcription": transcription,
+            "status": "success",
+            "response": response,
             "message": "File received successfully",
             "file_info": file_info
         })
-    
+
     return jsonify({"error": "Invalid file format"}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
